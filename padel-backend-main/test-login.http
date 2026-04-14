@@ -1,0 +1,34 @@
+### Get all membres
+GET http://localhost:8080/api/membres
+Accept: application/json
+
+###
+
+### Get membre by matricule
+GET http://localhost:8080/api/membres/G0001
+Accept: application/json
+
+###
+
+### Create un nouveau membre
+POST http://localhost:8080/api/membres
+Content-Type: application/json
+
+{
+  "matricule": "S0001",
+  "nom": "Martin",
+  "prenom": "Sophie",
+  "email": "sophie.martin@gmail.com"
+}
+
+###
+
+### Login avec matricule
+POST http://localhost:8080/api/membres/login
+Content-Type: application/json
+
+{
+  "matricule": "G0001"
+}
+
+###
