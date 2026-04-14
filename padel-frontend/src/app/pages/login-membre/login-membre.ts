@@ -6,6 +6,7 @@ import { Auth } from '../../core/services/auth';
 
 @Component({
   selector: 'app-login-membre',
+  standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './login-membre.html',
   styleUrl: './login-membre.css'
@@ -21,6 +22,11 @@ export class LoginMembre {
 
   onLogin(): void {
     this.errorMessage = '';
+
+    if (!this.matricule.trim()) {
+      this.errorMessage = 'Veuillez entrer un matricule';
+      return;
+    }
 
     this.authService.login({ matricule: this.matricule }).subscribe({
       next: () => this.router.navigate(['/dashboard']),

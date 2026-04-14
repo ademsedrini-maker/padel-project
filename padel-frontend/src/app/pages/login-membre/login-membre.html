@@ -3,17 +3,26 @@
 
   <form (ngSubmit)="onLogin()">
     <label for="matricule">Matricule</label>
-    <input id="matricule" name="matricule" type="text"
-           [(ngModel)]="matricule" required />
+    <input
+      id="matricule"
+      name="matricule"
+      type="text"
+      [(ngModel)]="matricule"
+      required
+    />
 
     <button type="submit">Se connecter</button>
 
     <p class="error" *ngIf="errorMessage">
       {{ errorMessage }}
-      <br>
+    </p>
+
+    <p class="register-link">
       <a routerLink="/register">Créer mon compte</a>
     </p>
   </form>
 
-  <p class="back"><a routerLink="/">← Retour</a></p>
+  <p class="back">
+    <a routerLink="/">← Retour</a>
+  </p>
 </div>

@@ -58,7 +58,7 @@ public class MembreService {
         return membre.getPenaliteExpiration().isAfter(LocalDate.now());
     }
 
-    public boolean hasSoldeDu(Membre membre) {
+    public boolean hasSoldueDu(Membre membre) {
         return membre.getSolde() != null &&
                 membre.getSolde().compareTo(BigDecimal.ZERO) > 0;
     }

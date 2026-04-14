@@ -8,5 +8,5 @@ INSERT INTO terrain (numero, site_id) VALUES
 
 INSERT INTO membre (matricule, nom, prenom, email, type_membre, site_id, solde) VALUES
                                                                                     ('G0001', 'Dupont', 'Jean', 'jean.dupont@mail.com', 'GLOBAL', NULL, 0),
-                                                                                    ('S00001', 'Martin', 'Sophie', 'sophie.martin@mail.com', 'SITE', 1, 0),
-                                                                                    ('L00001', 'Libre', 'Paul', 'paul.libre@mail.com', 'LIBRE', NULL, 0);
+                                                                                    ('S0001', 'Martin', 'Sophie', 'sophie.martin@mail.com', 'SITE', 1, 0),
+                                                                                    ('L0001', 'Libre', 'Paul', 'paul.libre@mail.com', 'LIBRE', NULL, 0);
