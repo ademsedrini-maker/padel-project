@@ -1,0 +1,19 @@
+<div class="login-container">
+  <h1>Connexion admin</h1>
+
+  <form (ngSubmit)="onLogin()">
+    <label for="username">Nom d'utilisateur</label>
+    <input id="username" name="username" type="text"
+           [(ngModel)]="username" required />
+
+    <label for="password">Mot de passe</label>
+    <input id="password" name="password" type="password"
+           [(ngModel)]="password" required />
+
+    <button type="submit">Se connecter</button>
+
+    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  </form>
+
+  <p class="back"><a routerLink="/">← Retour</a></p>
+</div>

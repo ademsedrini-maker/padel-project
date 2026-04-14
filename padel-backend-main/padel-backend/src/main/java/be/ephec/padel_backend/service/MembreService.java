@@ -4,6 +4,9 @@ import be.ephec.padel_backend.enums.TypeMembre;
 import be.ephec.padel_backend.model.Membre;
 import be.ephec.padel_backend.repository.MembreRepository;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -25,31 +28,38 @@ public class MembreService {
     }
 
     public Membre createMembre(Membre membre) {
-        String matricule = membre.getMatricule();
-
-        if (matricule == null || matricule.isEmpty()) {
+        if (membre.getMatricule() == null || membre.getMatricule().isBlank()) {
             throw new RuntimeException("Matricule obligatoire");
         }
 
-        char premiere = Character.toUpperCase(matricule.charAt(0));
-
-        switch (premiere) {
-            case 'G' -> membre.setTypeMembre(TypeMembre.GLOBAL);
-            case 'S' -> membre.setTypeMembre(TypeMembre.SITE);
-            case 'L' -> membre.setTypeMembre(TypeMembre.LIBRE);
-            default -> throw new RuntimeException("Matricule invalide. Doit commencer par G, S ou L");
+        if (membre.getTypeMembre() == null) {
+            membre.setTypeMembre(TypeMembre.LIBRE);
         }
 
         return membreRepository.save(membre);
     }
 
-    public boolean hasPenalite(Membre membre) {
-        if (membre.getPenaliteExpiration() == null) return false;
-        return membre.getPenaliteExpiration().isAfter(java.time.LocalDate.now());
+    public Membre saveMembre(Membre membre) {
+        if (membre.getTypeMembre() == null) {
+            membre.setTypeMembre(TypeMembre.LIBRE);
+        }
+
+        return membreRepository.save(membre);
     }
 
-    public boolean hasSoldueDu(Membre membre) {
+    public long countMembres() {
+        return membreRepository.count();
+    }
+
+    public boolean hasPenalite(Membre membre) {
+        if (membre.getPenaliteExpiration() == null) {
+            return false;
+        }
+        return membre.getPenaliteExpiration().isAfter(LocalDate.now());
+    }
+
+    public boolean hasSoldeDu(Membre membre) {
         return membre.getSolde() != null &&
-                membre.getSolde().compareTo(java.math.BigDecimal.ZERO) > 0;
+                membre.getSolde().compareTo(BigDecimal.ZERO) > 0;
     }
 }

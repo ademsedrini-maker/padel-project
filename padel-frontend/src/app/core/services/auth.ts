@@ -9,23 +9,22 @@ export interface User {
   role: 'MEMBER' | 'ADMIN';
 }
 
-export interface LoginRequest {
-  matricule: string;
-  password?: string;
-}
-
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class Auth {
-  private apiUrl = 'http://localhost:8080/api/auth';
+  private apiUrl = 'http://localhost:8080/api';
   currentUser = signal<User | null>(null);
 
   constructor(private http: HttpClient) {}
 
-  login(data: LoginRequest): Observable<User> {
-    return this.http.post<User>(`${this.apiUrl}/login`, data).pipe(
+  login(data: { matricule: string }): Observable<User> {
+    return this.http.post<User>(`${this.apiUrl}/membres/login`, data).pipe(
       tap(user => this.currentUser.set(user))
+    );
+  }
+
+  loginAdmin(data: { username: string; password: string }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/admin/login`, data).pipe(
+      tap(user => this.currentUser.set({ ...user, role: 'ADMIN' }))
     );
   }
 

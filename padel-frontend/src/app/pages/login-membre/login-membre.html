@@ -1,0 +1,19 @@
+<div class="login-container">
+  <h1>Connexion membre</h1>
+
+  <form (ngSubmit)="onLogin()">
+    <label for="matricule">Matricule</label>
+    <input id="matricule" name="matricule" type="text"
+           [(ngModel)]="matricule" required />
+
+    <button type="submit">Se connecter</button>
+
+    <p class="error" *ngIf="errorMessage">
+      {{ errorMessage }}
+      <br>
+      <a routerLink="/register">Créer mon compte</a>
+    </p>
+  </form>
+
+  <p class="back"><a routerLink="/">← Retour</a></p>
+</div>

@@ -35,8 +35,25 @@ public class MembreController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Membre> login(@RequestBody LoginMembreRequest request) {
-        Membre membre = membreService.getMembreByMatricule(request.getMatricule());
-        return ResponseEntity.ok(membre);
+    public ResponseEntity<?> login(@RequestBody LoginMembreRequest request) {
+        try {
+            Membre membre = membreService.getMembreByMatricule(request.getMatricule());
+            return ResponseEntity.ok(membre);
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body("Matricule introuvable");
+        }
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody Membre membre) {
+        try {
+            String matricule = "M" + String.format("%04d",
+                    membreService.countMembres() + 1);
+            membre.setMatricule(matricule);
+            Membre saved = membreService.saveMembre(membre);
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body("Erreur lors de la création du compte");
+        }
     }
 }

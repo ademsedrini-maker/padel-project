@@ -1,5 +1,6 @@
 package be.ephec.padel_backend.controller;
 
+import be.ephec.padel_backend.dto.AdminLoginRequest;
 import be.ephec.padel_backend.model.MatchPadel;
 import be.ephec.padel_backend.model.Membre;
 import be.ephec.padel_backend.model.Site;
@@ -8,8 +9,10 @@ import be.ephec.padel_backend.service.MatchService;
 import be.ephec.padel_backend.service.MembreService;
 import be.ephec.padel_backend.service.SiteService;
 import be.ephec.padel_backend.service.TerrainService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -36,10 +39,29 @@ public class AdminController {
         this.siteService = siteService;
     }
 
+    // ─── LOGIN ADMIN ─────────────────────────────────────────────────────────
+
+    @PostMapping("/login")
+    public ResponseEntity<?> loginAdmin(@RequestBody AdminLoginRequest request) {
+        if ("admin".equals(request.getUsername()) &&
+                "admin123".equals(request.getPassword())) {
+            return ResponseEntity.ok(Map.of(
+                    "role", "ADMIN",
+                    "username", "admin",
+                    "nom", "Administrateur"
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Identifiants incorrects");
+    }
+
+    // ─── TEST ────────────────────────────────────────────────────────────────
+
     @GetMapping("/test")
     public ResponseEntity<String> testAdminAccess() {
         return ResponseEntity.ok("Accès admin autorisé");
     }
+
+    // ─── MATCHS ──────────────────────────────────────────────────────────────
 
     @GetMapping("/matchs")
     public ResponseEntity<List<MatchPadel>> getAllMatchs() {
@@ -48,25 +70,48 @@ public class AdminController {
 
     @GetMapping("/matchs/{id}")
     public ResponseEntity<MatchPadel> getMatchById(@PathVariable Long id) {
-        return ResponseEntity.ok(matchService.getMatchById(id));
+        try {
+            return ResponseEntity.ok(matchService.getMatchById(id));
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Match non trouvé avec l'id : " + id);
+        }
     }
 
     @PutMapping("/matchs/{id}")
-    public ResponseEntity<MatchPadel> updateMatch(@PathVariable Long id, @RequestBody MatchPadel matchPadel) {
-        return ResponseEntity.ok(matchService.updateMatch(id, matchPadel));
+    public ResponseEntity<MatchPadel> updateMatch(@PathVariable Long id,
+                                                  @RequestBody MatchPadel matchPadel) {
+        try {
+            return ResponseEntity.ok(matchService.updateMatch(id, matchPadel));
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Match non trouvé avec l'id : " + id);
+        }
     }
 
     @PutMapping("/matchs/{id}/prix")
-    public ResponseEntity<MatchPadel> updatePrixMatch(@PathVariable Long id, @RequestBody Map<String, BigDecimal> body) {
+    public ResponseEntity<MatchPadel> updatePrixMatch(@PathVariable Long id,
+                                                      @RequestBody Map<String, BigDecimal> body) {
         BigDecimal nouveauPrix = body.get("montantTotal");
-        return ResponseEntity.ok(matchService.updatePrixMatch(id, nouveauPrix));
+        if (nouveauPrix == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Le champ 'montantTotal' est requis");
+        }
+        try {
+            return ResponseEntity.ok(matchService.updatePrixMatch(id, nouveauPrix));
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Match non trouvé avec l'id : " + id);
+        }
     }
 
     @DeleteMapping("/matchs/{id}")
     public ResponseEntity<String> deleteMatch(@PathVariable Long id) {
-        matchService.deleteMatch(id);
-        return ResponseEntity.ok("Match supprimé avec succès");
+        try {
+            matchService.deleteMatch(id);
+            return ResponseEntity.ok("Match supprimé avec succès");
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Match non trouvé avec l'id : " + id);
+        }
     }
+
+    // ─── TERRAINS ────────────────────────────────────────────────────────────
 
     @GetMapping("/terrains")
     public ResponseEntity<List<Terrain>> getAllTerrains() {
@@ -75,24 +120,39 @@ public class AdminController {
 
     @GetMapping("/terrains/{id}")
     public ResponseEntity<Terrain> getTerrainById(@PathVariable Long id) {
-        return ResponseEntity.ok(terrainService.getTerrainById(id));
+        try {
+            return ResponseEntity.ok(terrainService.getTerrainById(id));
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Terrain non trouvé avec l'id : " + id);
+        }
     }
 
     @PostMapping("/terrains")
     public ResponseEntity<Terrain> createTerrain(@RequestBody Terrain terrain) {
-        return ResponseEntity.ok(terrainService.createTerrain(terrain));
+        return ResponseEntity.status(HttpStatus.CREATED).body(terrainService.createTerrain(terrain));
     }
 
     @PutMapping("/terrains/{id}")
-    public ResponseEntity<Terrain> updateTerrain(@PathVariable Long id, @RequestBody Terrain terrain) {
-        return ResponseEntity.ok(terrainService.updateTerrain(id, terrain));
+    public ResponseEntity<Terrain> updateTerrain(@PathVariable Long id,
+                                                 @RequestBody Terrain terrain) {
+        try {
+            return ResponseEntity.ok(terrainService.updateTerrain(id, terrain));
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Terrain non trouvé avec l'id : " + id);
+        }
     }
 
     @DeleteMapping("/terrains/{id}")
     public ResponseEntity<String> deleteTerrain(@PathVariable Long id) {
-        terrainService.deleteTerrain(id);
-        return ResponseEntity.ok("Terrain supprimé avec succès");
+        try {
+            terrainService.deleteTerrain(id);
+            return ResponseEntity.ok("Terrain supprimé avec succès");
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Terrain non trouvé avec l'id : " + id);
+        }
     }
+
+    // ─── SITES ───────────────────────────────────────────────────────────────
 
     @GetMapping("/sites")
     public ResponseEntity<List<Site>> getAllSites() {
@@ -101,29 +161,46 @@ public class AdminController {
 
     @GetMapping("/sites/{id}")
     public ResponseEntity<Site> getSiteById(@PathVariable Long id) {
-        return ResponseEntity.ok(siteService.getSiteById(id));
+        try {
+            return ResponseEntity.ok(siteService.getSiteById(id));
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Site non trouvé avec l'id : " + id);
+        }
     }
 
     @PostMapping("/sites")
     public ResponseEntity<Site> createSite(@RequestBody Site site) {
-        return ResponseEntity.ok(siteService.createSite(site));
+        return ResponseEntity.status(HttpStatus.CREATED).body(siteService.createSite(site));
     }
 
     @PutMapping("/sites/{id}")
-    public ResponseEntity<Site> updateSite(@PathVariable Long id, @RequestBody Site site) {
-        return ResponseEntity.ok(siteService.updateSite(id, site));
+    public ResponseEntity<Site> updateSite(@PathVariable Long id,
+                                           @RequestBody Site site) {
+        try {
+            return ResponseEntity.ok(siteService.updateSite(id, site));
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Site non trouvé avec l'id : " + id);
+        }
     }
 
     @DeleteMapping("/sites/{id}")
     public ResponseEntity<String> deleteSite(@PathVariable Long id) {
-        siteService.deleteSite(id);
-        return ResponseEntity.ok("Site supprimé avec succès");
+        try {
+            siteService.deleteSite(id);
+            return ResponseEntity.ok("Site supprimé avec succès");
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Site non trouvé avec l'id : " + id);
+        }
     }
+
+    // ─── MEMBRES ─────────────────────────────────────────────────────────────
 
     @GetMapping("/membres")
     public ResponseEntity<List<Membre>> getAllMembres() {
         return ResponseEntity.ok(membreService.getAllMembres());
     }
+
+    // ─── STATS ───────────────────────────────────────────────────────────────
 
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getStats() {
