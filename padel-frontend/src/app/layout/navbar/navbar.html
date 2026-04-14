@@ -1,0 +1,9 @@
+<nav class="navbar" *ngIf="authService.isLoggedIn()">
+  <a routerLink="/dashboard">Dashboard</a>
+  <a routerLink="/reservations">Réservations</a>
+  <a routerLink="/terrains">Terrains</a>
+  <a routerLink="/members">Membres</a>
+  <a routerLink="/stats">Statistiques</a>
+  <a *ngIf="authService.isAdmin()" routerLink="/admin">Admin</a>
+  <button (click)="logout()">Déconnexion</button>
+</nav>
