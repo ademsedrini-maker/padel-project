@@ -14,32 +14,32 @@ export class Register {
   nom = '';
   prenom = '';
   email = '';
-  telephone = '';
-  typeMembre = 'LIBRE';
+
+  matriculeGenere = '';
   errorMessage = '';
-  successMessage = '';
+  inscriptionReussie = false;
 
   constructor(
     private http: HttpClient,
-    private router: Router
+    public router: Router
   ) {}
 
   onRegister(): void {
     this.errorMessage = '';
-    this.successMessage = '';
 
-    this.http.post('http://localhost:8080/api/membres/register', {
+    const membre = {
       nom: this.nom,
       prenom: this.prenom,
       email: this.email,
-      telephone: this.telephone,
-      typeMembre: this.typeMembre
-    }).subscribe({
-      next: () => {
-        this.successMessage = 'Compte créé ! Vous pouvez maintenant vous connecter.';
-        setTimeout(() => this.router.navigate(['/login-membre']), 2000);
+      typeMembre: 'LIBRE'
+    };
+
+    this.http.post<any>('http://localhost:8080/api/membres/register', membre).subscribe({
+      next: (membreCreé) => {
+        this.matriculeGenere = membreCreé.matricule;
+        this.inscriptionReussie = true;
       },
-      error: () => this.errorMessage = 'Erreur lors de la création du compte'
+      error: () => this.errorMessage = 'Erreur lors de l\'inscription'
     });
   }
 }

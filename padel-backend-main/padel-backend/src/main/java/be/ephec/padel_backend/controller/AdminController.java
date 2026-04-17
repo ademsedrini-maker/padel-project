@@ -43,15 +43,41 @@ public class AdminController {
 
     @PostMapping("/login")
     public ResponseEntity<?> loginAdmin(@RequestBody AdminLoginRequest request) {
-        if ("admin".equals(request.getUsername()) &&
-                "admin123".equals(request.getPassword())) {
+
+        // Admin global
+        if ("G001".equals(request.getUsername()) && "0000".equals(request.getPassword())) {
             return ResponseEntity.ok(Map.of(
                     "role", "ADMIN",
-                    "username", "admin",
-                    "nom", "Administrateur"
+                    "type", "GLOBAL",
+                    "username", "G001",
+                    "nom", "Administrateur Global"
             ));
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Identifiants incorrects");
+
+        // Admin site Bruxelles
+        if ("S001".equals(request.getUsername()) && "0000".equals(request.getPassword())) {
+            return ResponseEntity.ok(Map.of(
+                    "role", "ADMIN",
+                    "type", "SITE",
+                    "username", "S001",
+                    "nom", "Admin Site Bruxelles",
+                    "site", "Bruxelles"
+            ));
+        }
+
+        // Admin site Liège
+        if ("S002".equals(request.getUsername()) && "0000".equals(request.getPassword())) {
+            return ResponseEntity.ok(Map.of(
+                    "role", "ADMIN",
+                    "type", "SITE",
+                    "username", "S002",
+                    "nom", "Admin Site Liège",
+                    "site", "Liège"
+            ));
+        }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body("Identifiants incorrects");
     }
 
     // ─── TEST ────────────────────────────────────────────────────────────────

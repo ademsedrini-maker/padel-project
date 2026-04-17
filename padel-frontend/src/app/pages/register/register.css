@@ -1,6 +1,6 @@
 .register-container {
   max-width: 420px;
-  margin: 60px auto;
+  margin: 80px auto;
   padding: 24px;
   border: 1px solid #ddd;
   border-radius: 10px;
@@ -13,7 +13,7 @@ form {
   gap: 12px;
 }
 
-input, select, button {
+input, button {
   padding: 10px;
   font-size: 16px;
 }
@@ -26,15 +26,39 @@ button {
   cursor: pointer;
 }
 
-.success { color: #16a34a; font-weight: 500; }
-.error { color: #dc2626; }
-
-.back {
-  margin-top: 16px;
-  text-align: center;
+.error {
+  color: red;
 }
 
-.back a {
-  color: #6b7280;
+.login-link {
+  text-align: center;
+  margin-top: 12px;
+}
+
+.login-link a {
+  color: #2563eb;
   text-decoration: none;
+}
+
+.success-box {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.matricule {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #2563eb;
+  background: #eff6ff;
+  padding: 16px 32px;
+  border-radius: 10px;
+  letter-spacing: 4px;
+}
+
+.warning {
+  color: #d97706;
+  font-weight: 500;
 }

@@ -1,35 +1,38 @@
 <div class="register-container">
-  <h1>Créer mon compte</h1>
 
-  <form (ngSubmit)="onRegister()">
-    <label for="nom">Nom</label>
-    <input id="nom" name="nom" type="text"
-           [(ngModel)]="nom" required />
+  <!-- Formulaire d'inscription -->
+  <div *ngIf="!inscriptionReussie">
+    <h1>Créer un compte</h1>
 
-    <label for="prenom">Prénom</label>
-    <input id="prenom" name="prenom" type="text"
-           [(ngModel)]="prenom" required />
+    <form (ngSubmit)="onRegister()">
+      <label> for="nom">Nom</label>
+      <input id="nom" name="nom" type="text" [(ngModel)]="nom" required />
 
-    <label for="email">Email</label>
-    <input id="email" name="email" type="email"
-           [(ngModel)]="email" required />
+      <label> for="prenom">Prénom</label>
+      <input id="prenom" name="prenom" type="text" [(ngModel)]="prenom" required />
 
-    <label for="telephone">Téléphone</label>
-    <input id="telephone" name="telephone" type="text"
-           [(ngModel)]="telephone" />
+      <label> for="email">Email</label>
+      <input id="email" name="email" type="email" [(ngModel)]="email" required />
 
-    <label for="typeMembre">Type de membre</label>
-    <select id="typeMembre" name="typeMembre" [(ngModel)]="typeMembre">
-      <option value="LIBRE">Libre</option>
-      <option value="SITE">Site</option>
-      <option value="GLOBAL">Global</option>
-    </select>
+      <button type="submit">S'inscrire</button>
 
-    <button type="submit">Créer mon compte</button>
+      <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    </form>
 
-    <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
-    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
-  </form>
+    <p class="login-link">
+      Déjà un compte ? <a routerLink="/login-membre">Se connecter</a>
+    </p>
+  </div>
 
-  <p class="back"><a routerLink="/login-membre">← Retour connexion</a></p>
+  <!-- Après inscription réussie -->
+  <div *ngIf="inscriptionReussie" class="success-box">
+    <h1>Inscription réussie !</h1>
+    <p>Votre matricule est :</p>
+    <div class="matricule">{{ matriculeGenere }}</div>
+    <p class="warning">Notez bien ce matricule, il vous servira à vous connecter.</p>
+    <button (click)="router.navigate(['/login-membre'])">
+      Se connecter
+    </button>
+  </div>
+
 </div>
