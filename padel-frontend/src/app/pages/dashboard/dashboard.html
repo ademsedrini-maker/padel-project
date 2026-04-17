@@ -1,23 +1,23 @@
 <app-navbar></app-navbar>
 
-<div class="dashboard-container">
-  <h1>Espace membre</h1>
-  <p>Bienvenue sur votre espace personnel.</p>
+<div class="page">
+  <h1>Dashboard</h1>
 
-  <div class="dashboard-cards">
-    <a routerLink="/reservations" class="card">
-      <h2>Mes réservations</h2>
-      <p>Consultez vos réservations en cours.</p>
-    </a>
+  <!-- Message membre -->
+  <div *ngIf="!authService.isAdmin()">
+    <p>Bienvenue <strong>{{ authService.currentUser()?.nom }}</strong> !</p>
+    <p>Matricule : <strong>{{ authService.currentUser()?.matricule }}</strong></p>
+  </div>
 
-    <a routerLink="/terrains" class="card">
-      <h2>Réserver un terrain</h2>
-      <p>Voir les terrains disponibles par site.</p>
-    </a>
+  <!-- Message admin global -->
+  <div *ngIf="authService.isAdminGlobal()">
+    <p>Bienvenue <strong>Administrateur Global</strong></p>
+    <p>Vous avez accès à tous les sites.</p>
+  </div>
 
-    <a routerLink="/members" class="card">
-      <h2>Mon profil</h2>
-      <p>Voir les informations de votre compte membre.</p>
-    </a>
+  <!-- Message admin site -->
+  <div *ngIf="authService.isAdminSite()">
+    <p>Bienvenue <strong>{{ authService.currentUser()?.nom }}</strong></p>
+    <p>Vous gérez le site : <strong>{{ authService.getSiteAdmin() }}</strong></p>
   </div>
 </div>

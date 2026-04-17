@@ -3,10 +3,22 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 
 export interface User {
-  id: number;
+  id?: number;
   nom: string;
-  matricule: string;
+  matricule?: string;
+  username?: string;
   role: 'MEMBER' | 'ADMIN';
+  type?: 'GLOBAL' | 'SITE';
+  site?: string;
+}
+
+export interface LoginMembreRequest {
+  matricule: string;
+}
+
+export interface LoginAdminRequest {
+  username: string;
+  password: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -16,14 +28,14 @@ export class Auth {
 
   constructor(private http: HttpClient) {}
 
-  login(data: { matricule: string }): Observable<User> {
+  login(data: LoginMembreRequest): Observable<User> {
     return this.http.post<User>(`${this.apiUrl}/membres/login`, data).pipe(
-      tap(user => this.currentUser.set(user))
+      tap(user => this.currentUser.set({ ...user, role: 'MEMBER' }))
     );
   }
 
-  loginAdmin(data: { username: string; password: string }): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/admin/login`, data).pipe(
+  loginAdmin(data: LoginAdminRequest): Observable<User> {
+    return this.http.post<User>(`${this.apiUrl}/admin/login`, data).pipe(
       tap(user => this.currentUser.set({ ...user, role: 'ADMIN' }))
     );
   }
@@ -38,5 +50,25 @@ export class Auth {
 
   isAdmin(): boolean {
     return this.currentUser()?.role === 'ADMIN';
+  }
+
+  isMember(): boolean {
+    return this.currentUser()?.role === 'MEMBER';
+  }
+
+  isAdminGlobal(): boolean {
+    return this.isAdmin() && this.currentUser()?.type === 'GLOBAL';
+  }
+
+  isAdminSite(): boolean {
+    return this.isAdmin() && this.currentUser()?.type === 'SITE';
+  }
+
+  getSiteAdmin(): string | undefined {
+    return this.currentUser()?.site;
+  }
+
+  getCurrentUser(): User | null {
+    return this.currentUser();
   }
 }

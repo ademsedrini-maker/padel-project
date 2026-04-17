@@ -1,9 +1,24 @@
 <nav class="navbar" *ngIf="authService.isLoggedIn()">
+
+  <!-- Liens membres et admins -->
   <a routerLink="/dashboard">Dashboard</a>
   <a routerLink="/reservations">Réservations</a>
   <a routerLink="/terrains">Terrains</a>
-  <a routerLink="/members">Membres</a>
   <a routerLink="/stats">Statistiques</a>
-  <a *ngIf="authService.isAdmin()" routerLink="/admin">Admin</a>
+
+  <!-- Seulement admin -->
+  <ng-container *ngIf="authService.isAdmin()">
+    <a routerLink="/members">Membres</a>
+    <a routerLink="/admin">Admin</a>
+  </ng-container>
+
+  <!-- Info admin connecté -->
+  <span *ngIf="authService.isAdmin()" class="admin-info">
+    {{ authService.currentUser()?.nom }}
+    <span *ngIf="authService.isAdminSite()">
+      — {{ authService.getSiteAdmin() }}
+    </span>
+  </span>
+
   <button (click)="logout()">Déconnexion</button>
 </nav>
