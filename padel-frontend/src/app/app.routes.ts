@@ -9,8 +9,6 @@ import { Terrains } from './pages/terrains/terrains';
 import { Members } from './pages/members/members';
 import { Admin } from './pages/admin/admin';
 import { Stats } from './pages/stats/stats';
-import { authGuard } from './core/guards/auth-guard';
-import { adminGuard } from './core/guards/admin-guard';
 
 export const routes: Routes = [
   { path: '', component: Home },
@@ -18,12 +16,12 @@ export const routes: Routes = [
   { path: 'login-admin', component: LoginAdmin },
   { path: 'register', component: Register },
 
-  { path: 'dashboard', component: Dashboard, canActivate: [authGuard] },
-  { path: 'reservations', component: Reservations, canActivate: [authGuard] },
-  { path: 'terrains', component: Terrains, canActivate: [authGuard] },
-  { path: 'members', component: Members, canActivate: [authGuard] },
-  { path: 'stats', component: Stats, canActivate: [authGuard] },
-  { path: 'admin', component: Admin, canActivate: [authGuard, adminGuard] },
+  { path: 'dashboard', component: Dashboard },
+  { path: 'reservations', component: Reservations },
+  { path: 'terrains', component: Terrains },
+  { path: 'members', component: Members },
+  { path: 'stats', component: Stats },
+  { path: 'admin', component: Admin },
 
   { path: '**', redirectTo: '' }
 ];

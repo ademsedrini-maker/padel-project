@@ -2,5 +2,76 @@
 
 <div class="page">
   <h1>Réservations</h1>
-  <p>Page des réservations.</p>
+
+  <div *ngIf="message" class="alert-success">{{ message }}</div>
+  <div *ngIf="erreur" class="alert-error">{{ erreur }}</div>
+
+  <!-- Formulaire de réservation (membres seulement) -->
+  <div *ngIf="authService.isMember()" class="card">
+    <h2>Réserver un créneau</h2>
+
+    <div class="form-group">
+      abel for="creneau">Créneau disponible :</label>
+      <select id="creneau" [(ngModel)]="creneauSelectionne">
+        <option [value]="null" disabled>-- Choisir un créneau --</option>
+        <option *ngFor="let c of creneaux" [value]="c.id">
+          {{ formatDate(c.dateHeure) }} — {{ c.terrain.nom }} ({{ c.terrain.site }})
+        </option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      abel for="typeMatch">Type de match :</label>
+      <select id="typeMatch" [(ngModel)]="typeMatch">
+        <option value="SIMPLE">Simple (2 joueurs)</option>
+        <option value="DOUBLE">Double (4 joueurs)</option>
+      </select>
+    </div>
+
+    <button (click)="reserver()" class="btn-primary">Réserver</button>
+  </div>
+
+  <!-- Mes réservations -->
+  <div *ngIf="authService.isMember()" class="card">
+    <h2>Mes réservations</h2>
+
+    <div *ngIf="mesReservations.length === 0" class="empty">
+      Aucune réservation pour le moment.
+    </div>
+
+    <table *ngIf="mesReservations.length > 0">
+      <thead>
+      <tr>
+        <th>Date</th>
+        <th>Terrain</th>
+        <th>Site</th>
+        <th>Type</th>
+        <th>Statut</th>
+        <th>Montant</th>
+        <th>Action</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let r of mesReservations">
+        <td>{{ formatDate(r.creneau.dateHeure) }}</td>
+        <td>{{ r.creneau.terrain.nom }}</td>
+        <td>{{ r.creneau.terrain.site }}</td>
+        <td>{{ r.typeMatch }}</td>
+        <td [class]="'statut-' + r.statut.toLowerCase()">{{ r.statut }}</td>
+        <td>{{ r.montantTotal | number:'1.2-2' }} €</td>
+        <td>
+          <button *ngIf="r.statut === 'EN_ATTENTE'" (click)="annuler(r.id)" class="btn-danger">
+            Annuler
+          </button>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Vue admin : toutes les réservations -->
+  <div *ngIf="authService.isAdmin()" class="card">
+    <h2>Toutes les réservations</h2>
+    <p>Accédez à la gestion complète via la page <a routerLink="/admin">Administration</a>.</p>
+  </div>
 </div>

@@ -1,24 +1,40 @@
 <nav class="navbar" *ngIf="authService.isLoggedIn()">
 
-  <!-- Liens membres et admins -->
-  <a routerLink="/dashboard">Dashboard</a>
-  <a routerLink="/reservations">Réservations</a>
-  <a routerLink="/terrains">Terrains</a>
-  <a routerLink="/stats">Statistiques</a>
+  <!-- Logo / Titre -->
+  <span class="navbar-brand">🎾 Padel</span>
 
-  <!-- Seulement admin -->
+  <!-- Liens communs -->
+  <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+  <a routerLink="/reservations" routerLinkActive="active">Réservations</a>
+  <a routerLink="/terrains" routerLinkActive="active">Terrains</a>
+  <a routerLink="/stats" routerLinkActive="active">Statistiques</a>
+
+  <!-- Liens admin uniquement -->
   <ng-container *ngIf="authService.isAdmin()">
-    <a routerLink="/members">Membres</a>
-    <a routerLink="/admin">Admin</a>
+    <a routerLink="/members" routerLinkActive="active">Membres</a>
+    <a routerLink="/admin" routerLinkActive="active">Admin</a>
   </ng-container>
 
-  <!-- Info admin connecté -->
-  <span *ngIf="authService.isAdmin()" class="admin-info">
-    {{ authService.currentUser()?.nom }}
-    <span *ngIf="authService.isAdminSite()">
-      — {{ authService.getSiteAdmin() }}
-    </span>
+  <!-- Spacer -->
+  <span class="spacer"></span>
+
+  <!-- Infos utilisateur connecté -->
+  <span class="user-info" *ngIf="authService.isMember()">
+    👤 {{ authService.currentUser()?.nom }}
+    {{ authService.currentUser()?.prenom }}
+    — {{ authService.currentUser()?.matricule }}
   </span>
 
-  <button (click)="logout()">Déconnexion</button>
+  <span class="user-info admin-badge" *ngIf="authService.isAdminGlobal()">
+    🔑 Admin Global — {{ authService.currentUser()?.nom }}
+  </span>
+
+  <span class="user-info admin-badge" *ngIf="authService.isAdminSite()">
+    🔑 Admin — {{ authService.currentUser()?.nom }}
+    — {{ authService.getSiteAdmin() }}
+  </span>
+
+  <!-- Bouton déconnexion -->
+  <button class="logout-btn" (click)="logout()">Déconnexion</button>
+
 </nav>

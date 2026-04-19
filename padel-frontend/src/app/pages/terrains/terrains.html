@@ -2,5 +2,18 @@
 
 <div class="page">
   <h1>Terrains</h1>
-  <p>Page des terrains.</p>
+
+  <div *ngIf="erreur" class="alert-error">{{ erreur }}</div>
+
+  <div *ngIf="terrains.length === 0 && !erreur" class="empty">
+    Chargement des terrains...
+  </div>
+
+  <div class="terrains-grid">
+    <div *ngFor="let t of terrains" class="terrain-card">
+      <h3>{{ t.nom }}</h3>
+      <p class="site-badge">{{ t.site }}</p>
+      <a [routerLink]="['/reservations']" class="btn-primary">Réserver</a>
+    </div>
+  </div>
 </div>
