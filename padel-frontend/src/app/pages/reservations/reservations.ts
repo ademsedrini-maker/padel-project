@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { Navbar } from '../../layout/navbar/navbar';
 import { Auth } from '../../core/services/auth';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 interface Creneau {
   id: number;
@@ -21,7 +22,7 @@ interface Reservation {
 
 @Component({
   selector: 'app-reservations',
-  imports: [CommonModule, Navbar, FormsModule],
+  imports: [CommonModule, Navbar, FormsModule, RouterLink],
   templateUrl: './reservations.html',
   styleUrl: './reservations.css'
 })
