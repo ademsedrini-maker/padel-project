@@ -1,190 +1,90 @@
 <app-navbar></app-navbar>
 
-<div class="dashboard-page">
-  <section id="accueil" class="hero-section">
-    <div class="hero-content">
-      <div class="hero-text">
-        <p class="eyebrow">Espace membre</p>
-        <h1>
-          Bienvenue
-          {{ authService.getCurrentUser()?.prenom || authService.getCurrentUser()?.nom || 'sur Mon Padel' }}
-        </h1>
-        <p class="hero-description">
-          Réservez votre terrain, consultez vos réservations, découvrez nos sites
-          et retrouvez toutes les informations utiles en un seul endroit.
-        </p>
+<!-- HERO SECTION -->
+<section class="hero">
+  <div class="hero-content">
+    <h1>Bienvenue sur <span class="accent">Padel Club</span></h1>
+    <p class="hero-sub">Réservez vos terrains, gérez vos matchs et retrouvez tous vos membres en un seul endroit.</p>
 
-        <div class="hero-actions">
-          <a [routerLink]="['/dashboard']" fragment="terrains" class="btn btn-primary">
-            Voir nos terrains
-          </a>
+    @if (authService.isMember()) {
+      <p class="hero-welcome">👋 Bonjour <strong>{{ authService.currentUser()?.nom }} {{ authService.currentUser()?.prenom }}</strong> !</p>
+    }
+    @if (authService.isAdminGlobal()) {
+      <p class="hero-welcome">🔑 Connecté en tant qu'<strong>Administrateur Global</strong></p>
+    }
+    @if (authService.isAdminSite()) {
+      <p class="hero-welcome">🔑 Administrateur du site <strong>{{ authService.getSiteAdmin() }}</strong></p>
+    }
 
-          <a routerLink="/reservations" class="btn btn-secondary">
-            Mes réservations
-          </a>
-        </div>
-      </div>
-
-      <div class="hero-card">
-        <h2>Infos rapides</h2>
-
-        <div class="quick-info">
-          <div>
-            <span class="label">Type membre</span>
-            <strong>{{ authService.getCurrentUser()?.typeMembre || 'Non défini' }}</strong>
-          </div>
-
-          <div>
-            <span class="label">Site</span>
-            <strong>{{ authService.getCurrentUser()?.site || 'Tous sites' }}</strong>
-          </div>
-
-          <div>
-            <span class="label">Matricule</span>
-            <strong>{{ authService.getCurrentUser()?.matricule || '---' }}</strong>
-          </div>
-        </div>
-      </div>
+    <div class="hero-actions">
+      <a routerLink="/reservations" class="btn-primary">📅 Réserver un terrain</a>
+      <a routerLink="/terrains" class="btn-secondary">🏟️ Voir les terrains</a>
     </div>
-  </section>
+  </div>
 
-  <section class="section quick-links-section">
-    <div class="section-header">
-      <h2>Accès rapide</h2>
-      <p>Retrouvez les pages principales de votre espace membre.</p>
+  <div class="hero-image">
+    <img
+      src="https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=600&q=80"
+      alt="Terrain de padel"
+      width="600"
+      height="400"
+      loading="lazy"
+    />
+  </div>
+</section>
+
+<!-- FEATURES SECTION -->
+<section class="features">
+  <h2>Tout ce dont vous avez besoin</h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🏟️</div>
+      <h3>Nos Terrains</h3>
+      <p>Découvrez nos terrains de padel disponibles sur tous nos sites. Qualité professionnelle garantie.</p>
+      <a routerLink="/terrains" class="feature-link">Voir les terrains →</a>
     </div>
 
-    <div class="cards-grid">
-      <a class="card card-link" [routerLink]="['/dashboard']" fragment="accueil">
-        <h3>Accueil</h3>
-        <p>Retournez à la page principale de votre espace membre.</p>
-      </a>
-
-      <a class="card card-link" [routerLink]="['/dashboard']" fragment="terrains">
-        <h3>Nos terrains</h3>
-        <p>Consultez nos sites disponibles à Bruxelles et Liège.</p>
-      </a>
-
-      <a class="card card-link" routerLink="/reservations">
-        <h3>Mes réservations</h3>
-        <p>Visualisez vos réservations en cours et à venir.</p>
-      </a>
-
-      <a class="card card-link" [routerLink]="['/dashboard']" fragment="contact">
-        <h3>Contact</h3>
-        <p>Besoin d’aide ? Retrouvez nos coordonnées rapidement.</p>
-      </a>
-
-      <a class="card card-link" [routerLink]="['/dashboard']" fragment="infos">
-        <h3>Infos</h3>
-        <p>Horaires, règles de réservation et informations pratiques.</p>
-      </a>
-    </div>
-  </section>
-
-  <section id="terrains" class="section">
-    <div class="section-header">
-      <h2>Nos terrains</h2>
-      <p>Découvrez les sites disponibles et choisissez votre prochain terrain.</p>
+    <div class="feature-card">
+      <div class="feature-icon">📅</div>
+      <h3>Réservation Facile</h3>
+      <p>Réservez votre créneau en quelques clics. Simple, rapide et confirmé instantanément.</p>
+      <a routerLink="/reservations" class="feature-link">Réserver →</a>
     </div>
 
-    <div class="cards-grid">
-      <div class="card site-card">
-        <h3>Bruxelles</h3>
-        <p>
-          Site principal avec plusieurs terrains de padel accessibles selon votre type de membre.
-        </p>
-        <ul>
-          <li>Adresse : Bruxelles</li>
-          <li>Horaires : 08h00 - 22h00</li>
-          <li>Réservation selon disponibilité</li>
-        </ul>
-        <a routerLink="/terrains" class="btn-inline">Voir les terrains</a>
-      </div>
-
-      <div class="card site-card">
-        <h3>Liège</h3>
-        <p>
-          Un second site avec ses propres horaires et terrains de réservation.
-        </p>
-        <ul>
-          <li>Adresse : Liège</li>
-          <li>Horaires : 09h00 - 21h00</li>
-          <li>Créneaux de 1h30</li>
-        </ul>
-        <a routerLink="/terrains" class="btn-inline">Voir les terrains</a>
-      </div>
-    </div>
-  </section>
-
-  <section id="reservations" class="section">
-    <div class="section-header">
-      <h2>Mes réservations</h2>
-      <p>Consultez vos prochains matchs et votre historique.</p>
+    <div class="feature-card">
+      <div class="feature-icon">👥</div>
+      <h3>Espace Membres</h3>
+      <p>Gérez vos informations, consultez votre historique et votre solde en temps réel.</p>
+      <a routerLink="/members" class="feature-link">Mon espace →</a>
     </div>
 
-    <div class="cards-grid">
-      <div class="card">
-        <h3>Réservations à venir</h3>
-        <p>Vos prochaines réservations apparaîtront ici.</p>
-        <a routerLink="/reservations" class="btn-inline">Voir mes réservations</a>
+    @if (authService.isAdminGlobal() || authService.isAdminSite()) {
+      <div class="feature-card feature-admin">
+        <div class="feature-icon">🔑</div>
+        <h3>Administration</h3>
+        <p>Gérez les réservations, les membres et les statistiques de votre site.</p>
+        <a routerLink="/admin" class="feature-link">Admin →</a>
       </div>
+    }
+  </div>
+</section>
 
-      <div class="card">
-        <h3>Nouvelle réservation</h3>
-        <p>
-          Accédez aux terrains disponibles pour réserver un nouveau créneau.
-        </p>
-        <a routerLink="/reservations" class="btn-inline">Réserver maintenant</a>
-      </div>
-    </div>
-  </section>
-
-  <section id="contact" class="section">
-    <div class="section-header">
-      <h2>Contact</h2>
-      <p>Une question sur une réservation ou sur votre accès ? Contactez-nous.</p>
-    </div>
-
-    <div class="cards-grid">
-      <div class="card">
-        <h3>Email</h3>
-        <p>contact</p>
-      </div>
-
-      <div class="card">
-        <h3>Téléphone</h3>
-        <p>+32 2 123 45 67</p>
-      </div>
-
-      <div class="card">
-        <h3>Support</h3>
-        <p>Disponible du lundi au samedi pour répondre à vos questions.</p>
-      </div>
-    </div>
-  </section>
-
-  <section id="infos" class="section info-banner-section">
-    <div class="section-header">
-      <h2>Infos pratiques</h2>
-      <p>Règles importantes à connaître avant de réserver.</p>
-    </div>
-
-    <div class="info-banner">
-      <div class="info-item">
-        <h3>Durée d’une réservation</h3>
-        <p>1h30 par match avec 15 minutes entre deux réservations.</p>
-      </div>
-
-      <div class="info-item">
-        <h3>Horaires</h3>
-        <p>Les horaires dépendent du site et sont définis pour une année civile.</p>
-      </div>
-
-      <div class="info-item">
-        <h3>Anticipation</h3>
-        <p>Les règles de réservation dépendent du type de membre.</p>
-      </div>
-    </div>
-  </section>
-</div>
+<!-- STATS SECTION -->
+<section class="stats-section">
+  <div class="stat-item">
+    <span class="stat-number">3</span>
+    <span class="stat-label">Sites</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-number">12</span>
+    <span class="stat-label">Terrains</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-number">500+</span>
+    <span class="stat-label">Membres</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-number">7j/7</span>
+    <span class="stat-label">Ouvert</span>
+  </div>
+</section>

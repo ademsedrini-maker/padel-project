@@ -5,11 +5,12 @@ import { Auth } from '../../core/services/auth';
 
 @Component({
   selector: 'app-navbar',
+  standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './navbar.html',
-  styleUrl: './navbar.css'
+  styleUrls: ['./navbar.css']
 })
-export class Navbar {
+export class NavbarComponent {
   constructor(
     public authService: Auth,
     private router: Router

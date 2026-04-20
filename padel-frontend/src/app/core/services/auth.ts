@@ -23,9 +23,7 @@ export interface LoginAdminRequest {
   password: string;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class Auth {
   private apiUrl = 'http://localhost:8080/api';
   currentUser = signal<User | null>(null);
@@ -34,13 +32,13 @@ export class Auth {
 
   login(data: LoginMembreRequest): Observable<User> {
     return this.http.post<User>(`${this.apiUrl}/membres/login`, data).pipe(
-      tap((user) => this.currentUser.set({ ...user, role: 'MEMBER' }))
+      tap(user => this.currentUser.set({ ...user, role: 'MEMBER' }))
     );
   }
 
   loginAdmin(data: LoginAdminRequest): Observable<User> {
     return this.http.post<User>(`${this.apiUrl}/admin/login`, data).pipe(
-      tap((user) => this.currentUser.set({ ...user, role: 'ADMIN' }))
+      tap(user => this.currentUser.set({ ...user, role: 'ADMIN' }))
     );
   }
 
@@ -61,18 +59,18 @@ export class Auth {
   }
 
   isAdminGlobal(): boolean {
-    return this.currentUser()?.role === 'ADMIN' && this.currentUser()?.type === 'GLOBAL';
+    return this.isAdmin() && this.currentUser()?.type === 'GLOBAL';
   }
 
   isAdminSite(): boolean {
-    return this.currentUser()?.role === 'ADMIN' && this.currentUser()?.type === 'SITE';
-  }
-
-  getCurrentUser(): User | null {
-    return this.currentUser();
+    return this.isAdmin() && this.currentUser()?.type === 'SITE';
   }
 
   getSiteAdmin(): string | undefined {
     return this.currentUser()?.site;
+  }
+
+  getCurrentUser(): User | null {
+    return this.currentUser();
   }
 }

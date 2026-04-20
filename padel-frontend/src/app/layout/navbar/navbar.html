@@ -1,40 +1,30 @@
-<nav class="navbar" *ngIf="authService.isLoggedIn()">
+<nav class="navbar">
+  <div class="navbar-brand">
+    <span class="brand-icon">🎾</span>
+    <span class="brand-name">Padel Club</span>
+  </div>
 
-  <!-- Logo / Titre -->
-  <span class="navbar-brand">🎾 Padel</span>
-
-  <!-- Liens communs -->
-  <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
-  <a routerLink="/reservations" routerLinkActive="active">Réservations</a>
-  <a routerLink="/terrains" routerLinkActive="active">Terrains</a>
-  <a routerLink="/stats" routerLinkActive="active">Statistiques</a>
-
-  <!-- Liens admin uniquement -->
-  <ng-container *ngIf="authService.isAdmin()">
+  <div class="navbar-links">
+    <a routerLink="/dashboard" routerLinkActive="active">Accueil</a>
+    <a routerLink="/terrains" routerLinkActive="active">Terrains</a>
+    <a routerLink="/reservations" routerLinkActive="active">Réservations</a>
     <a routerLink="/members" routerLinkActive="active">Membres</a>
-    <a routerLink="/admin" routerLinkActive="active">Admin</a>
-  </ng-container>
 
-  <!-- Spacer -->
-  <span class="spacer"></span>
+    @if (authService.isAdminGlobal() || authService.isAdminSite()) {
+      <a routerLink="/admin" routerLinkActive="active">Admin</a>
+    }
+  </div>
 
-  <!-- Infos utilisateur connecté -->
-  <span class="user-info" *ngIf="authService.isMember()">
-    👤 {{ authService.currentUser()?.nom }}
-    {{ authService.currentUser()?.prenom }}
-    — {{ authService.currentUser()?.matricule }}
-  </span>
-
-  <span class="user-info admin-badge" *ngIf="authService.isAdminGlobal()">
-    🔑 Admin Global — {{ authService.currentUser()?.nom }}
-  </span>
-
-  <span class="user-info admin-badge" *ngIf="authService.isAdminSite()">
-    🔑 Admin — {{ authService.currentUser()?.nom }}
-    — {{ authService.getSiteAdmin() }}
-  </span>
-
-  <!-- Bouton déconnexion -->
-  <button class="logout-btn" (click)="logout()">Déconnexion</button>
-
+  <div class="navbar-right">
+    @if (authService.isMember()) {
+      <span class="user-info">👤 {{ authService.currentUser()?.nom }} {{ authService.currentUser()?.prenom }}</span>
+    }
+    @if (authService.isAdminGlobal()) {
+      <span class="admin-badge">🔑 Admin Global</span>
+    }
+    @if (authService.isAdminSite()) {
+      <span class="admin-badge">🔑 Admin — {{ authService.getSiteAdmin() }}</span>
+    }
+    <button class="logout-btn" (click)="logout()">Déconnexion</button>
+  </div>
 </nav>

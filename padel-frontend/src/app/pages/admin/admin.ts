@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Navbar } from '../../layout/navbar/navbar';
+import { NavbarComponent } from '../../layout/navbar/navbar';
 import { Auth } from '../../core/services/auth';
 
 interface Reservation {
@@ -15,9 +15,10 @@ interface Reservation {
 
 @Component({
   selector: 'app-admin',
-  imports: [CommonModule, Navbar],
+  standalone: true,
+  imports: [CommonModule, NavbarComponent],
   templateUrl: './admin.html',
-  styleUrl: './admin.css'
+  styleUrls: ['./admin.css']
 })
 export class Admin implements OnInit {
   private apiUrl = 'http://localhost:8080/api';
@@ -35,8 +36,8 @@ export class Admin implements OnInit {
   }
 
   chargerReservations(): void {
-    this.http.get<Reservation[]>(`${this.apiUrl}/matches`).subscribe({
-      next: data => this.reservations = data,
+    this.http.get(`${this.apiUrl}/matches`).subscribe({
+      next: (data: any) => this.reservations = data,
       error: () => this.erreur = 'Impossible de charger les réservations.'
     });
   }

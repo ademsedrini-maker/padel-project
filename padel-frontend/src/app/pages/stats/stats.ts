@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Navbar } from '../../layout/navbar/navbar';
+import { NavbarComponent } from '../../layout/navbar/navbar';
 import { Auth } from '../../core/services/auth';
 
 interface StatsData {
@@ -14,13 +14,12 @@ interface StatsData {
 @Component({
   selector: 'app-stats',
   standalone: true,
-  imports: [CommonModule, Navbar],
+  imports: [CommonModule, NavbarComponent],
   templateUrl: './stats.html',
-  styleUrl: './stats.css'
+  styleUrls: ['./stats.css']
 })
 export class Stats implements OnInit {
   private apiUrl = 'http://localhost:8080/api';
-
   stats: StatsData | null = null;
   erreur: string = '';
 
@@ -30,13 +29,9 @@ export class Stats implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.http.get<StatsData>(`${this.apiUrl}/stats`).subscribe({
-      next: (data) => {
-        this.stats = data;
-      },
-      error: () => {
-        this.erreur = 'Erreur lors du chargement des statistiques';
-      }
+    this.http.get(`${this.apiUrl}/stats`).subscribe({
+      next: (data: any) => this.stats = data,
+      error: () => this.erreur = 'Erreur lors du chargement des statistiques.'
     });
   }
 }

@@ -1,86 +1,177 @@
 <app-navbar></app-navbar>
 
-<div class="page">
-  <h1>Réservations</h1>
+<div class="resa-page">
 
-  @if (message) {
-    <div class="alert-success">{{ message }}</div>
-  }
-  @if (erreur) {
-    <div class="alert-error">{{ erreur }}</div>
-  }
+  <!-- HEADER -->
+  <div class="resa-header">
+    <h1>🎾 Réservations</h1>
+    @if (authService.isMember()) {
+      <div class="membre-badge">{{ getTypeMembreInfo() }}</div>
+    }
+  </div>
 
-  @if (authService.isMember()) {
-    <div class="card">
-      <h2>Réserver un créneau</h2>
+  <!-- MESSAGES -->
+  @if (message) { <div class="alert-success">{{ message }}</div> }
+  @if (erreur)  { <div class="alert-error">{{ erreur }}</div> }
 
-      <div class="form-group">
-        <label> for="creneau">Créneau disponible :</label>
-        <select id="creneau" [(ngModel)]="creneauSelectionne">
-          <option [value]="null" disabled>-- Choisir un créneau --</option>
-          @for (c of creneaux; track c.id) {
-            <option [value]="c.id">
-              {{ formatDate(c.dateHeure) }} — {{ c.terrain.nom }} ({{ c.terrain.site }})
-            </option>
+  <!-- ONGLETS -->
+  <div class="onglets">
+    <button [class.actif]="onglet === 'reserver'" (click)="onglet = 'reserver'">
+      📅 Réserver
+    </button>
+    <button [class.actif]="onglet === 'futures'" (click)="onglet = 'futures'">
+      🔜 Mes prochaines
+      @if (reservationsFutures.length > 0) {
+        <span class="badge-count">{{ reservationsFutures.length }}</span>
+      }
+    </button>
+    <button [class.actif]="onglet === 'historique'" (click)="onglet = 'historique'">
+      📋 Historique
+    </button>
+  </div>
+
+  <!-- ONGLET RÉSERVER -->
+  @if (onglet === 'reserver') {
+    @if (authService.isMember()) {
+      <div class="card">
+        <h2>Choisir un créneau</h2>
+
+        <!-- FILTRES -->
+        <div class="filtres">
+          <div class="form-group">
+            <label for="date">📆 Filtrer par date</label>
+            <input type="date" id="date"
+                   [(ngModel)]="dateSelectionnee"
+                   (ngModelChange)="filtrerCreneaux()"
+                   [min]="today()"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="terrain">🏟️ Filtrer par terrain</label>
+            <select id="terrain"
+                    [(ngModel)]="terrainSelectionne"
+                    (ngModelChange)="filtrerCreneaux()"
+            >
+              <option [ngValue]="null">-- Tous les terrains --</option>
+              @for (t of terrains; track t.id) {
+                <option [ngValue]="t.id">{{ t.nom }} ({{ t.site }})</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <!-- LISTE CRÉNEAUX -->
+        <div class="form-group">
+          <label>⏰ Créneau disponible</label>
+          @if (creneauxFiltres.length === 0) {
+            <p class="empty">Aucun créneau disponible pour ces critères.</p>
+          } @else {
+            <div class="creneaux-grid">
+              @for (c of creneauxFiltres; track c.id) {
+                <div class="creneau-card"
+                     [class.selected]="creneauSelectionne === c.id"
+                     (click)="creneauSelectionne = c.id"
+                >
+                  <div class="creneau-date">{{ formatDate(c.dateHeure) }}</div>
+                  <div class="creneau-terrain">{{ c.terrain.nom }}</div>
+                  <div class="creneau-site">📍 {{ c.terrain.site }}</div>
+                </div>
+              }
+            </div>
           }
-        </select>
+        </div>
+
+        <!-- TYPE DE MATCH -->
+        <div class="form-group">
+          <label for="typeMatch">🎮 Type de match</label>
+          <div class="type-match-options">
+            <label class="type-option" [class.selected]="typeMatch === 'SIMPLE'">
+              <input type="radio" [(ngModel)]="typeMatch" value="SIMPLE" />
+              <span class="type-icon">👤👤</span>
+              <span>Simple</span>
+              <small>2 joueurs</small>
+            </label>
+            <label class="type-option" [class.selected]="typeMatch === 'DOUBLE'">
+              <input type="radio" [(ngModel)]="typeMatch" value="DOUBLE" />
+              <span class="type-icon">👥👥</span>
+              <span>Double</span>
+              <small>4 joueurs</small>
+            </label>
+          </div>
+        </div>
+
+        <button class="btn-reserver" (click)="reserver()" [disabled]="!creneauSelectionne">
+          ✅ Confirmer la réservation
+        </button>
       </div>
-
-      <div class="form-group">
-        <label> for="typeMatch">Type de match :</label>
-        <select id="typeMatch" [(ngModel)]="typeMatch">
-          <option value="SIMPLE">Simple (2 joueurs)</option>
-          <option value="DOUBLE">Double (4 joueurs)</option>
-        </select>
+    } @else {
+      <div class="card empty-state">
+        <p>🔒 Vous devez être connecté en tant que membre pour réserver.</p>
       </div>
+    }
+  }
 
-      <button (click)="reserver()" class="btn-primary">Réserver</button>
-    </div>
-
+  <!-- ONGLET FUTURES -->
+  @if (onglet === 'futures') {
     <div class="card">
-      <h2>Mes réservations</h2>
-
-      @if (mesReservations.length === 0) {
-        <div class="empty">Aucune réservation pour le moment.</div>
+      <h2>🔜 Mes prochaines réservations</h2>
+      @if (reservationsFutures.length === 0) {
+        <div class="empty-state">
+          <p>Aucune réservation à venir.</p>
+          <button class="btn-link" (click)="onglet = 'reserver'">→ Réserver maintenant</button>
+        </div>
       } @else {
-        <table>
-          <thead>
-          <tr>
-            <th>Date</th>
-            <th>Terrain</th>
-            <th>Site</th>
-            <th>Type</th>
-            <th>Statut</th>
-            <th>Montant</th>
-            <th>Action</th>
-          </tr>
-          </thead>
-          <tbody>
-            @for (r of mesReservations; track r.id) {
-              <tr>
-                <td>{{ formatDate(r.creneau.dateHeure) }}</td>
-                <td>{{ r.creneau.terrain.nom }}</td>
-                <td>{{ r.creneau.terrain.site }}</td>
-                <td>{{ r.typeMatch }}</td>
-                <td [class]="'statut-' + r.statut.toLowerCase()">{{ r.statut }}</td>
-                <td>{{ r.montantTotal | number:'1.2-2' }} €</td>
-                <td>
-                  @if (r.statut === 'EN_ATTENTE') {
-                    <button (click)="annuler(r.id)" class="btn-danger">Annuler</button>
-                  }
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+        <div class="reservations-list">
+          @for (r of reservationsFutures; track r.id) {
+            <div class="resa-card">
+              <div class="resa-info">
+                <div class="resa-date">📅 {{ formatDate(r.creneau.dateHeure) }}</div>
+                <div class="resa-terrain">🏟️ {{ r.creneau.terrain.nom }} — {{ r.creneau.terrain.site }}</div>
+                <div class="resa-details">
+                  <span>{{ r.typeMatch === 'SIMPLE' ? '👤👤 Simple' : '👥👥 Double' }}</span>
+                  <span class="badge-statut" [ngClass]="getStatutClass(r.statut)">
+                    {{ getStatutLabel(r.statut) }}
+                  </span>
+                  <span class="resa-montant">{{ r.montantTotal | number:'1.2-2' }} €</span>
+                </div>
+              </div>
+              @if (r.statut === 'EN_ATTENTE') {
+                <button class="btn-annuler" (click)="annuler(r.id)">Annuler</button>
+              }
+            </div>
+          }
+        </div>
       }
     </div>
   }
 
-  @if (authService.isAdmin()) {
+  <!-- ONGLET HISTORIQUE -->
+  @if (onglet === 'historique') {
     <div class="card">
-      <h2>Toutes les réservations</h2>
-      <p>Accédez à la gestion complète via la page <a routerLink="/admin">Administration</a>.</p>
+      <h2>📋 Historique</h2>
+      @if (reservationsPassees.length === 0) {
+        <p class="empty">Aucune réservation passée.</p>
+      } @else {
+        <div class="reservations-list">
+          @for (r of reservationsPassees; track r.id) {
+            <div class="resa-card historique">
+              <div class="resa-info">
+                <div class="resa-date">📅 {{ formatDate(r.creneau.dateHeure) }}</div>
+                <div class="resa-terrain">🏟️ {{ r.creneau.terrain.nom }} — {{ r.creneau.terrain.site }}</div>
+                <div class="resa-details">
+                  <span>{{ r.typeMatch === 'SIMPLE' ? '👤👤 Simple' : '👥👥 Double' }}</span>
+                  <span class="badge-statut" [ngClass]="getStatutClass(r.statut)">
+                    {{ getStatutLabel(r.statut) }}
+                  </span>
+                  <span class="resa-montant">{{ r.montantTotal | number:'1.2-2' }} €</span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
     </div>
   }
+
 </div>

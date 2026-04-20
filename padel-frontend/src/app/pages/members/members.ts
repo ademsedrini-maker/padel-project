@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Navbar } from '../../layout/navbar/navbar';
+import { NavbarComponent } from '../../layout/navbar/navbar';
 import { Auth } from '../../core/services/auth';
 
 interface Membre {
@@ -17,9 +17,10 @@ interface Membre {
 
 @Component({
   selector: 'app-members',
-  imports: [CommonModule, Navbar],
+  standalone: true,
+  imports: [CommonModule, NavbarComponent],
   templateUrl: './members.html',
-  styleUrl: './members.css'
+  styleUrls: ['./members.css']
 })
 export class Members implements OnInit {
   private apiUrl = 'http://localhost:8080/api';
@@ -32,13 +33,12 @@ export class Members implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Admin site voit seulement son site, admin global voit tout
     const endpoint = this.authService.isAdminGlobal()
       ? `${this.apiUrl}/membres`
       : `${this.apiUrl}/membres/site/${this.authService.getSiteAdmin()}`;
 
-    this.http.get<Membre[]>(endpoint).subscribe({
-      next: data => this.membres = data,
+    this.http.get(endpoint).subscribe({
+      next: (data: any) => this.membres = data,
       error: () => this.erreur = 'Impossible de charger les membres.'
     });
   }
@@ -46,9 +46,9 @@ export class Members implements OnInit {
   getTypeBadgeClass(type: string): string {
     switch (type) {
       case 'GLOBAL': return 'badge-global';
-      case 'SITE': return 'badge-site';
-      case 'LIBRE': return 'badge-libre';
-      default: return '';
+      case 'SITE':   return 'badge-site';
+      case 'LIBRE':  return 'badge-libre';
+      default:       return '';
     }
   }
 }
