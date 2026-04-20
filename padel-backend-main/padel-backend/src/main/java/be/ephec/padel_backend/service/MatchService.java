@@ -1,6 +1,7 @@
 package be.ephec.padel_backend.service;
 
 import be.ephec.padel_backend.enums.StatutMatch;
+import be.ephec.padel_backend.enums.StatutParticipant;
 import be.ephec.padel_backend.enums.TypeMatch;
 import be.ephec.padel_backend.model.Creneau;
 import be.ephec.padel_backend.model.MatchPadel;
@@ -55,27 +56,29 @@ public class MatchService {
         return matchPadelRepository.findByCreneauTerrainSiteId(siteId);
     }
 
-    public MatchPadel creerMatch(Long organisateurId, Long creneauId, TypeMatch typeMatch) {
+    public MatchPadel createMatch(Long organisateurId, Long creneauId, TypeMatch typeMatch) {
         Membre organisateur = membreService.getMembreById(organisateurId);
-        Creneau creneau = creneauRepository.findById(creneauId)
-                .orElseThrow(() -> new RuntimeException("Créneau introuvable avec l'id : " + creneauId));
 
-        if (Boolean.FALSE.equals(creneau.getDisponible())) {
-            throw new RuntimeException("Ce créneau n'est plus disponible");
-        }
+        Creneau creneau = creneauRepository.findById(creneauId)
+                .orElseThrow(() -> new RuntimeException("Créneau introuvable : " + creneauId));
 
         if (matchPadelRepository.existsByCreneauId(creneauId)) {
-            throw new RuntimeException("Un match existe déjà sur ce créneau");
+            throw new RuntimeException("Ce créneau est déjà réservé");
         }
 
-        String erreurValidation = membreService.validerReservation(
+        if (Boolean.FALSE.equals(creneau.getDisponible())) {
+            throw new RuntimeException("Ce créneau n'est pas disponible");
+        }
+
+        Long siteId = creneau.getTerrain().getSite().getId();
+        String erreur = membreService.validerReservation(
                 organisateur,
                 creneau.getDateHeureDebut().toLocalDate(),
-                creneau.getTerrain().getSite().getId()
+                siteId
         );
 
-        if (erreurValidation != null) {
-            throw new RuntimeException(erreurValidation);
+        if (erreur != null) {
+            throw new RuntimeException(erreur);
         }
 
         MatchPadel match = new MatchPadel();
@@ -89,25 +92,26 @@ public class MatchService {
         match.setEstDevenuPublicAutomatiquement(false);
         match.setSoldeOrganisateurRegle(false);
 
-        MatchPadel matchSauve = matchPadelRepository.save(match);
+        MatchPadel savedMatch = matchPadelRepository.save(match);
 
         ParticipantMatch participantOrganisateur = new ParticipantMatch();
-        participantOrganisateur.setMatchPadel(matchSauve);
+        participantOrganisateur.setMatchPadel(savedMatch);
         participantOrganisateur.setMembre(organisateur);
-        participantOrganisateur.setStatut(
-                typeMatch == TypeMatch.PUBLIC
-                        ? StatutParticipant.EN_ATTENTE_PAIEMENT
-                        : StatutParticipant.CONFIRME
-        );
         participantOrganisateur.setMontantPaye(BigDecimal.ZERO);
         participantOrganisateur.setAjouteParOrganisateur(false);
+
+        if (typeMatch == TypeMatch.PUBLIC) {
+            participantOrganisateur.setStatut(StatutParticipant.EN_ATTENTE_PAIEMENT);
+        } else {
+            participantOrganisateur.setStatut(StatutParticipant.CONFIRME);
+        }
 
         participantMatchRepository.save(participantOrganisateur);
 
         creneau.setDisponible(false);
         creneauRepository.save(creneau);
 
-        return matchSauve;
+        return savedMatch;
     }
 
     public ParticipantMatch ajouterParticipantPrive(Long matchId, Long membreId, Long organisateurId) {
@@ -168,13 +172,15 @@ public class MatchService {
         return participantMatchRepository.save(participant);
     }
 
-    public void annulerMatch(Long matchId) {
+    public MatchPadel annulerMatch(Long matchId) {
         MatchPadel match = getMatchById(matchId);
         match.setStatut(StatutMatch.ANNULE);
-        matchPadelRepository.save(match);
+        MatchPadel updatedMatch = matchPadelRepository.save(match);
 
         Creneau creneau = match.getCreneau();
         creneau.setDisponible(true);
         creneauRepository.save(creneau);
+
+        return updatedMatch;
     }
 }

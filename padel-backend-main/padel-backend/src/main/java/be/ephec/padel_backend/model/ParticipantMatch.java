@@ -1,5 +1,6 @@
 package be.ephec.padel_backend.model;
 
+import be.ephec.padel_backend.enums.StatutParticipant;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
