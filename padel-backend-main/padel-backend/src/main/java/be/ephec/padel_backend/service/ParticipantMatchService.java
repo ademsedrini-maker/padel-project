@@ -1,8 +1,6 @@
 package be.ephec.padel_backend.service;
 
 import be.ephec.padel_backend.enums.StatutMatch;
-import be.ephec.padel_backend.enums.StatutParticipant;
-import be.ephec.padel_backend.enums.TypeMatch;
 import be.ephec.padel_backend.model.MatchPadel;
 import be.ephec.padel_backend.model.Membre;
 import be.ephec.padel_backend.model.ParticipantMatch;

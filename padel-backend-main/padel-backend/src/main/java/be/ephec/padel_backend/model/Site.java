@@ -1,11 +1,20 @@
 package be.ephec.padel_backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "site")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Site {
 
     @Id
@@ -15,6 +24,7 @@ public class Site {
     @Column(nullable = false, length = 100)
     private String nom;
 
+    @Column(length = 255)
     private String adresse;
 
     @Column(nullable = false)
@@ -26,17 +36,11 @@ public class Site {
     @Column(nullable = false)
     private Integer anneeHoraire;
 
-    // Getters et Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getNom() { return nom; }
-    public void setNom(String nom) { this.nom = nom; }
-    public String getAdresse() { return adresse; }
-    public void setAdresse(String adresse) { this.adresse = adresse; }
-    public LocalTime getHeureOuverture() { return heureOuverture; }
-    public void setHeureOuverture(LocalTime heureOuverture) { this.heureOuverture = heureOuverture; }
-    public LocalTime getHeureFermeture() { return heureFermeture; }
-    public void setHeureFermeture(LocalTime heureFermeture) { this.heureFermeture = heureFermeture; }
-    public Integer getAnneeHoraire() { return anneeHoraire; }
-    public void setAnneeHoraire(Integer anneeHoraire) { this.anneeHoraire = anneeHoraire; }
+    @OneToMany(mappedBy = "site", cascade = CascadeType.ALL, orphanRemoval = false)
+    @JsonIgnore
+    private List<Terrain> terrains = new ArrayList<>();
+
+    @OneToMany(mappedBy = "site", cascade = CascadeType.ALL, orphanRemoval = false)
+    @JsonIgnore
+    private List<Membre> membres = new ArrayList<>();
 }

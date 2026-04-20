@@ -2,24 +2,35 @@ package be.ephec.padel_backend.service;
 
 import be.ephec.padel_backend.enums.StatutMatch;
 import be.ephec.padel_backend.enums.TypeMatch;
+import be.ephec.padel_backend.model.Creneau;
 import be.ephec.padel_backend.model.MatchPadel;
 import be.ephec.padel_backend.model.Membre;
+import be.ephec.padel_backend.model.ParticipantMatch;
+import be.ephec.padel_backend.repository.CreneauRepository;
 import be.ephec.padel_backend.repository.MatchPadelRepository;
+import be.ephec.padel_backend.repository.ParticipantMatchRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
+@Transactional
 public class MatchService {
 
     private final MatchPadelRepository matchPadelRepository;
+    private final ParticipantMatchRepository participantMatchRepository;
+    private final CreneauRepository creneauRepository;
     private final MembreService membreService;
 
-    public MatchService(MatchPadelRepository matchPadelRepository, MembreService membreService) {
+    public MatchService(MatchPadelRepository matchPadelRepository,
+                        ParticipantMatchRepository participantMatchRepository,
+                        CreneauRepository creneauRepository,
+                        MembreService membreService) {
         this.matchPadelRepository = matchPadelRepository;
+        this.participantMatchRepository = participantMatchRepository;
+        this.creneauRepository = creneauRepository;
         this.membreService = membreService;
     }
 
@@ -29,70 +40,141 @@ public class MatchService {
 
     public MatchPadel getMatchById(Long id) {
         return matchPadelRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Match introuvable : " + id));
+                .orElseThrow(() -> new RuntimeException("Match introuvable avec l'id : " + id));
     }
 
-    public MatchPadel createMatch(MatchPadel match, Membre organisateur) {
-        if (membreService.hasPenalite(organisateur)) {
-            throw new RuntimeException("Réservation impossible : pénalité active");
+    public List<MatchPadel> getMatchsByOrganisateur(Long organisateurId) {
+        return matchPadelRepository.findByOrganisateurId(organisateurId);
+    }
+
+    public List<MatchPadel> getMatchsPublics() {
+        return matchPadelRepository.findByTypeMatch(TypeMatch.PUBLIC);
+    }
+
+    public List<MatchPadel> getMatchsBySite(Long siteId) {
+        return matchPadelRepository.findByCreneauTerrainSiteId(siteId);
+    }
+
+    public MatchPadel creerMatch(Long organisateurId, Long creneauId, TypeMatch typeMatch) {
+        Membre organisateur = membreService.getMembreById(organisateurId);
+        Creneau creneau = creneauRepository.findById(creneauId)
+                .orElseThrow(() -> new RuntimeException("Créneau introuvable avec l'id : " + creneauId));
+
+        if (Boolean.FALSE.equals(creneau.getDisponible())) {
+            throw new RuntimeException("Ce créneau n'est plus disponible");
         }
 
-        if (membreService.hasSoldueDu(organisateur)) {
-            throw new RuntimeException("Réservation impossible : solde dû");
+        if (matchPadelRepository.existsByCreneauId(creneauId)) {
+            throw new RuntimeException("Un match existe déjà sur ce créneau");
         }
 
-        LocalDate dateMatch = match.getCreneau().getDateHeure().toLocalDate();
-        LocalDate aujourdHui = LocalDate.now();
-        long joursAvant = ChronoUnit.DAYS.between(aujourdHui, dateMatch);
+        String erreurValidation = membreService.validerReservation(
+                organisateur,
+                creneau.getDateHeureDebut().toLocalDate(),
+                creneau.getTerrain().getSite().getId()
+        );
 
-        switch (organisateur.getTypeMembre()) {
-            case GLOBAL -> {
-                if (joursAvant > 21) {
-                    throw new RuntimeException("Réservation trop tôt : max 3 semaines");
-                }
-            }
-            case SITE -> {
-                if (joursAvant > 14) {
-                    throw new RuntimeException("Réservation trop tôt : max 2 semaines");
-                }
-            }
-            case LIBRE -> {
-                if (joursAvant > 5) {
-                    throw new RuntimeException("Réservation trop tôt : max 5 jours");
-                }
-            }
+        if (erreurValidation != null) {
+            throw new RuntimeException(erreurValidation);
         }
 
-        match.setOrganisateur(organisateur);
+        MatchPadel match = new MatchPadel();
+        match.setTypeMatch(typeMatch);
         match.setStatut(StatutMatch.EN_ATTENTE);
-        return matchPadelRepository.save(match);
+        match.setOrganisateur(organisateur);
+        match.setCreneau(creneau);
+        match.setMontantTotal(BigDecimal.valueOf(60.00));
+        match.setMontantParJoueur(BigDecimal.valueOf(15.00));
+        match.setNombreMaxJoueurs(4);
+        match.setEstDevenuPublicAutomatiquement(false);
+        match.setSoldeOrganisateurRegle(false);
+
+        MatchPadel matchSauve = matchPadelRepository.save(match);
+
+        ParticipantMatch participantOrganisateur = new ParticipantMatch();
+        participantOrganisateur.setMatchPadel(matchSauve);
+        participantOrganisateur.setMembre(organisateur);
+        participantOrganisateur.setStatut(
+                typeMatch == TypeMatch.PUBLIC
+                        ? StatutParticipant.EN_ATTENTE_PAIEMENT
+                        : StatutParticipant.CONFIRME
+        );
+        participantOrganisateur.setMontantPaye(BigDecimal.ZERO);
+        participantOrganisateur.setAjouteParOrganisateur(false);
+
+        participantMatchRepository.save(participantOrganisateur);
+
+        creneau.setDisponible(false);
+        creneauRepository.save(creneau);
+
+        return matchSauve;
     }
 
-    public MatchPadel updateMatch(Long id, MatchPadel matchDetails) {
-        MatchPadel match = getMatchById(id);
-        match.setCreneau(matchDetails.getCreneau());
-        match.setOrganisateur(matchDetails.getOrganisateur());
-        match.setTypeMatch(matchDetails.getTypeMatch());
-        match.setStatut(matchDetails.getStatut());
-        match.setMontantTotal(matchDetails.getMontantTotal());
-        match.setParticipants(matchDetails.getParticipants());
-        return matchPadelRepository.save(match);
+    public ParticipantMatch ajouterParticipantPrive(Long matchId, Long membreId, Long organisateurId) {
+        MatchPadel match = getMatchById(matchId);
+        Membre membre = membreService.getMembreById(membreId);
+
+        if (!match.getOrganisateur().getId().equals(organisateurId)) {
+            throw new RuntimeException("Seul l'organisateur peut ajouter un joueur à un match privé");
+        }
+
+        if (match.getTypeMatch() != TypeMatch.PRIVE) {
+            throw new RuntimeException("Cette action est autorisée uniquement pour un match privé");
+        }
+
+        long nbParticipants = participantMatchRepository.countByMatchPadelId(matchId);
+        if (nbParticipants >= 4) {
+            throw new RuntimeException("Le match contient déjà 4 joueurs");
+        }
+
+        if (participantMatchRepository.existsByMatchPadelIdAndMembreId(matchId, membreId)) {
+            throw new RuntimeException("Ce joueur est déjà inscrit à ce match");
+        }
+
+        ParticipantMatch participant = new ParticipantMatch();
+        participant.setMatchPadel(match);
+        participant.setMembre(membre);
+        participant.setStatut(StatutParticipant.EN_ATTENTE_PAIEMENT);
+        participant.setMontantPaye(BigDecimal.ZERO);
+        participant.setAjouteParOrganisateur(true);
+
+        return participantMatchRepository.save(participant);
     }
 
-    public MatchPadel updatePrixMatch(Long id, BigDecimal nouveauPrix) {
-        MatchPadel match = getMatchById(id);
-        match.setMontantTotal(nouveauPrix);
-        return matchPadelRepository.save(match);
+    public ParticipantMatch inscrireJoueurMatchPublic(Long matchId, Long membreId) {
+        MatchPadel match = getMatchById(matchId);
+        Membre membre = membreService.getMembreById(membreId);
+
+        if (match.getTypeMatch() != TypeMatch.PUBLIC) {
+            throw new RuntimeException("Ce match n'est pas public");
+        }
+
+        long nbParticipants = participantMatchRepository.countByMatchPadelId(matchId);
+        if (nbParticipants >= 4) {
+            throw new RuntimeException("Le match est complet");
+        }
+
+        if (participantMatchRepository.existsByMatchPadelIdAndMembreId(matchId, membreId)) {
+            throw new RuntimeException("Ce joueur est déjà inscrit à ce match");
+        }
+
+        ParticipantMatch participant = new ParticipantMatch();
+        participant.setMatchPadel(match);
+        participant.setMembre(membre);
+        participant.setStatut(StatutParticipant.EN_ATTENTE_PAIEMENT);
+        participant.setMontantPaye(BigDecimal.ZERO);
+        participant.setAjouteParOrganisateur(false);
+
+        return participantMatchRepository.save(participant);
     }
 
-    public MatchPadel rendrePublic(Long id) {
-        MatchPadel match = getMatchById(id);
-        match.setTypeMatch(TypeMatch.PUBLIC);
-        return matchPadelRepository.save(match);
-    }
+    public void annulerMatch(Long matchId) {
+        MatchPadel match = getMatchById(matchId);
+        match.setStatut(StatutMatch.ANNULE);
+        matchPadelRepository.save(match);
 
-    public void deleteMatch(Long id) {
-        MatchPadel match = getMatchById(id);
-        matchPadelRepository.delete(match);
+        Creneau creneau = match.getCreneau();
+        creneau.setDisponible(true);
+        creneauRepository.save(creneau);
     }
 }

@@ -1,28 +1,45 @@
 package be.ephec.padel_backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "creneau")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Creneau {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @Column(nullable = false)
+    private LocalDateTime dateHeureDebut;
+
+    @Column(nullable = false)
+    private LocalDateTime dateHeureFin;
+
+    @Column(nullable = false)
+    private Boolean disponible = true;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "terrain_id", nullable = false)
     private Terrain terrain;
 
-    @Column(nullable = false)
-    private LocalDateTime dateHeure;
+    @OneToOne(mappedBy = "creneau")
+    @JsonIgnore
+    private MatchPadel matchPadel;
 
-    // Getters et Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Terrain getTerrain() { return terrain; }
-    public void setTerrain(Terrain terrain) { this.terrain = terrain; }
-    public LocalDateTime getDateHeure() { return dateHeure; }
-    public void setDateHeure(LocalDateTime dateHeure) { this.dateHeure = dateHeure; }
+    public Creneau(LocalDateTime dateHeureDebut, Terrain terrain) {
+        this.dateHeureDebut = dateHeureDebut;
+        this.dateHeureFin = dateHeureDebut.plusMinutes(90);
+        this.disponible = true;
+        this.terrain = terrain;
+    }
 }
