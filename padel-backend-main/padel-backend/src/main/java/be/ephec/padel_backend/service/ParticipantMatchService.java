@@ -1,101 +1,98 @@
 package be.ephec.padel_backend.service;
 
-import be.ephec.padel_backend.enums.StatutMatch;
+import be.ephec.padel_backend.enums.StatutParticipant;
 import be.ephec.padel_backend.model.MatchPadel;
 import be.ephec.padel_backend.model.Membre;
 import be.ephec.padel_backend.model.ParticipantMatch;
 import be.ephec.padel_backend.repository.ParticipantMatchRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Transactional
 public class ParticipantMatchService {
 
-    private final ParticipantMatchRepository participantRepository;
+    private final ParticipantMatchRepository participantMatchRepository;
     private final MatchService matchService;
     private final MembreService membreService;
 
-    public ParticipantMatchService(ParticipantMatchRepository participantRepository,
+    public ParticipantMatchService(ParticipantMatchRepository participantMatchRepository,
                                    MatchService matchService,
                                    MembreService membreService) {
-        this.participantRepository = participantRepository;
+        this.participantMatchRepository = participantMatchRepository;
         this.matchService = matchService;
         this.membreService = membreService;
     }
 
     public List<ParticipantMatch> getAll() {
-        return participantRepository.findAll();
+        return participantMatchRepository.findAll();
+    }
+
+    public ParticipantMatch getById(Long id) {
+        return participantMatchRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Participant introuvable avec l'id : " + id));
     }
 
     public List<ParticipantMatch> getByMatch(Long matchId) {
-        MatchPadel match = matchService.getMatchById(matchId);
-        return match.getParticipants();
+        return participantMatchRepository.findByMatchPadelId(matchId);
     }
 
-    // Inscrire un membre dans un match
-    public ParticipantMatch inscrire(Long matchId, String matricule) {
+    public List<ParticipantMatch> getByMembre(Long membreId) {
+        return participantMatchRepository.findByMembreId(membreId);
+    }
+
+    public ParticipantMatch inscrire(Long matchId, Long membreId, boolean ajouteParOrganisateur) {
         MatchPadel match = matchService.getMatchById(matchId);
-        Membre membre = membreService.getMembreByMatricule(matricule);
+        Membre membre = membreService.getMembreById(membreId);
 
-        // Vérifier que le match n'est pas annulé
-        if (match.getStatut() == StatutMatch.ANNULE) {
-            throw new RuntimeException("Impossible de s'inscrire : match annulé");
+        if (participantMatchRepository.existsByMatchPadelIdAndMembreId(matchId, membreId)) {
+            throw new RuntimeException("Ce membre est déjà inscrit à ce match");
         }
 
-        // Vérifier max 4 joueurs
-        long nbParticipants = match.getParticipants().stream()
-                .filter(p -> p.getStatut() != StatutParticipant.ABSENT)
-                .count();
+        long nbParticipants = participantMatchRepository.countByMatchPadelId(matchId);
         if (nbParticipants >= 4) {
-            throw new RuntimeException("Match complet : 4 joueurs maximum");
-        }
-
-        // Vérifier que le membre n'est pas déjà inscrit
-        boolean dejaInscrit = match.getParticipants().stream()
-                .anyMatch(p -> p.getMembre().getId().equals(membre.getId()));
-        if (dejaInscrit) {
-            throw new RuntimeException("Membre déjà inscrit dans ce match");
-        }
-
-        // Vérifier pénalité
-        if (membreService.hasPenalite(membre)) {
-            throw new RuntimeException("Inscription impossible : pénalité active");
+            throw new RuntimeException("Le match est déjà complet");
         }
 
         ParticipantMatch participant = new ParticipantMatch();
-        participant.setMatch(match);
+        participant.setMatchPadel(match);
         participant.setMembre(membre);
-        participant.setStatut(StatutParticipant.INSCRIT);
-        participant.setDateInscription(LocalDateTime.now());
+        participant.setAjouteParOrganisateur(ajouteParOrganisateur);
         participant.setMontantPaye(BigDecimal.ZERO);
+        participant.setDateInscription(LocalDateTime.now());
+        participant.setStatut(StatutParticipant.EN_ATTENTE_PAIEMENT);
 
-        return participantRepository.save(participant);
+        return participantMatchRepository.save(participant);
     }
 
-    // Payer sa place dans un match
-    public ParticipantMatch payer(Long participantId) {
-        ParticipantMatch participant = participantRepository.findById(participantId)
-                .orElseThrow(() -> new RuntimeException("Participant introuvable"));
+    public ParticipantMatch payer(Long participantId, BigDecimal montant) {
+        ParticipantMatch participant = getById(participantId);
 
-        MatchPadel match = participant.getMatch();
-        BigDecimal montantParJoueur = match.getMontantTotal()
-                .divide(BigDecimal.valueOf(4));
-
-        participant.setMontantPaye(montantParJoueur);
-        participant.setStatut(StatutParticipant.PAYE);
+        participant.setMontantPaye(montant);
         participant.setDatePaiement(LocalDateTime.now());
+        participant.setStatut(StatutParticipant.CONFIRME);
 
-        // Vérifier si le match peut être confirmé (4 joueurs payés)
-        long nbPaies = match.getParticipants().stream()
-                .filter(p -> p.getStatut() == StatutParticipant.PAYE)
+        return participantMatchRepository.save(participant);
+    }
+
+    public ParticipantMatch annulerParticipation(Long participantId) {
+        ParticipantMatch participant = getById(participantId);
+        participant.setStatut(StatutParticipant.ANNULE);
+        return participantMatchRepository.save(participant);
+    }
+
+    public void supprimer(Long participantId) {
+        ParticipantMatch participant = getById(participantId);
+        participantMatchRepository.delete(participant);
+    }
+
+    public long compterParticipantsActifs(Long matchId) {
+        return participantMatchRepository.findByMatchPadelId(matchId).stream()
+                .filter(p -> p.getStatut() != StatutParticipant.ANNULE)
                 .count();
-        if (nbPaies == 4) {
-            match.setStatut(StatutMatch.CONFIRME);
-        }
-
-        return participantRepository.save(participant);
     }
 }

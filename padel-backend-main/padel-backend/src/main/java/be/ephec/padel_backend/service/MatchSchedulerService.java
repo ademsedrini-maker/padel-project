@@ -3,88 +3,79 @@ package be.ephec.padel_backend.service;
 import be.ephec.padel_backend.enums.StatutParticipant;
 import be.ephec.padel_backend.enums.TypeMatch;
 import be.ephec.padel_backend.model.MatchPadel;
-import be.ephec.padel_backend.model.Membre;
 import be.ephec.padel_backend.model.ParticipantMatch;
 import be.ephec.padel_backend.repository.MatchPadelRepository;
-import be.ephec.padel_backend.repository.MembreRepository;
 import be.ephec.padel_backend.repository.ParticipantMatchRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Transactional
 public class MatchSchedulerService {
 
     private final MatchPadelRepository matchPadelRepository;
     private final ParticipantMatchRepository participantMatchRepository;
-    private final MembreRepository membreRepository;
-    private final PaiementService paiementService;
+    private final MembreService membreService;
 
     public MatchSchedulerService(MatchPadelRepository matchPadelRepository,
                                  ParticipantMatchRepository participantMatchRepository,
-                                 MembreRepository membreRepository,
-                                 PaiementService paiementService) {
+                                 MembreService membreService) {
         this.matchPadelRepository = matchPadelRepository;
         this.participantMatchRepository = participantMatchRepository;
-        this.membreRepository = membreRepository;
-        this.paiementService = paiementService;
+        this.membreService = membreService;
     }
 
-    /**
-     * Tourne chaque nuit à 01h00.
-     * Pour chaque match qui a lieu DEMAIN :
-     *
-     * 1. Si match PRIVE avec < 4 joueurs inscrits
-     *    → devient PUBLIC
-     *    → pénalité d'1 semaine à l'organisateur
-     *
-     * 2. Si des joueurs sont encore INSCRITS (non payés)
-     *    → leur place est libérée (suppression du participant)
-     *
-     * 3. Si des places sont vides après libération
-     *    → le solde est ajouté à l'organisateur
-     */
-    @Scheduled(cron = "0 0 1 * * *")
-    public void verifierMatchsDuLendemain() {
-
+    @Scheduled(cron = "0 0 2 * * *")
+    public void verifierMatchsLaVeille() {
         LocalDate demain = LocalDate.now().plusDays(1);
-        LocalDateTime debut = demain.atStartOfDay();
-        LocalDateTime fin = demain.atTime(23, 59, 59);
 
-        // Récupérer tous les matchs qui ont lieu demain
-        List<MatchPadel> matchsDemain = matchPadelRepository
-                .findByCreneauDateHeureBetween(debut, fin);
+        List<MatchPadel> matchs = matchPadelRepository.findAll().stream()
+                .filter(m -> m.getCreneau().getDateHeureDebut().toLocalDate().isEqual(demain))
+                .toList();
 
-        for (MatchPadel match : matchsDemain) {
+        for (MatchPadel match : matchs) {
+            long nbParticipants = participantMatchRepository.countByMatchPadelId(match.getId());
 
-            // ── RÈGLE 1 : Match PRIVE avec < 4 joueurs → PUBLIC + pénalité ──
-            if (match.getTypeMatch() == TypeMatch.PRIVE) {
-                long nbInscrits = participantMatchRepository.countByMatch(match);
-                if (nbInscrits < 4) {
-                    // Rendre public
-                    match.setTypeMatch(TypeMatch.PUBLIC);
-                    matchPadelRepository.save(match);
+            if (match.getTypeMatch() == TypeMatch.PRIVE && nbParticipants < 4) {
+                match.setTypeMatch(TypeMatch.PUBLIC);
+                match.setEstDevenuPublicAutomatiquement(true);
 
-                    // Pénalité à l'organisateur
-                    Membre organisateur = match.getOrganisateur();
-                    organisateur.setPenaliteExpiration(LocalDate.now().plusWeeks(1));
-                    membreRepository.save(organisateur);
+                if (match.getOrganisateur() != null) {
+                    match.getOrganisateur().setPenaliteExpiration(LocalDate.now().plusWeeks(1));
+                    membreService.saveMembre(match.getOrganisateur());
                 }
             }
 
-            // ── RÈGLE 2 : Libérer les places non payées ──────────────────────
-            List<ParticipantMatch> nonPayes = participantMatchRepository
-                    .findByMatchAndStatut(match, StatutParticipant.INSCRIT);
+            List<ParticipantMatch> participants = participantMatchRepository.findByMatchPadelId(match.getId());
 
-            for (ParticipantMatch p : nonPayes) {
-                participantMatchRepository.delete(p);
+            for (ParticipantMatch participant : participants) {
+                if (participant.getStatut() == StatutParticipant.EN_ATTENTE_PAIEMENT) {
+                    participant.setStatut(StatutParticipant.ANNULE);
+                    participantMatchRepository.save(participant);
+                    match.setTypeMatch(TypeMatch.PUBLIC);
+                }
             }
 
-            // ── RÈGLE 3 : Solde organisateur si places vides ─────────────────
-            paiementService.appliquerSoldeOrganisateur(match);
+            long nbConfirmes = participantMatchRepository
+                    .findByMatchPadelIdAndStatut(match.getId(), StatutParticipant.CONFIRME)
+                    .size();
+
+            if (nbConfirmes < 4 && match.getOrganisateur() != null) {
+                BigDecimal solde = BigDecimal.valueOf((4 - nbConfirmes) * 15.00);
+                BigDecimal ancienSolde = match.getOrganisateur().getSolde() == null
+                        ? BigDecimal.ZERO
+                        : match.getOrganisateur().getSolde();
+
+                match.getOrganisateur().setSolde(ancienSolde.add(solde));
+                membreService.saveMembre(match.getOrganisateur());
+            }
+
+            matchPadelRepository.save(match);
         }
     }
 }

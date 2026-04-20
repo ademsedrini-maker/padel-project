@@ -2,45 +2,68 @@ package be.ephec.padel_backend.controller;
 
 import be.ephec.padel_backend.model.ParticipantMatch;
 import be.ephec.padel_backend.service.ParticipantMatchService;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/participants")
 @CrossOrigin(origins = "*")
 public class ParticipantMatchController {
 
-    private final ParticipantMatchService participantService;
+    private final ParticipantMatchService participantMatchService;
 
-    public ParticipantMatchController(ParticipantMatchService participantService) {
-        this.participantService = participantService;
+    public ParticipantMatchController(ParticipantMatchService participantMatchService) {
+        this.participantMatchService = participantMatchService;
     }
 
-    // Voir tous les participants
     @GetMapping
     public List<ParticipantMatch> getAll() {
-        return participantService.getAll();
+        return participantMatchService.getAll();
     }
 
-    // Voir les participants d'un match
+    @GetMapping("/{id}")
+    public ParticipantMatch getById(@PathVariable Long id) {
+        return participantMatchService.getById(id);
+    }
+
     @GetMapping("/match/{matchId}")
-    public ResponseEntity<List<ParticipantMatch>> getByMatch(@PathVariable Long matchId) {
-        return ResponseEntity.ok(participantService.getByMatch(matchId));
+    public List<ParticipantMatch> getByMatch(@PathVariable Long matchId) {
+        return participantMatchService.getByMatch(matchId);
     }
 
-    // Inscrire un membre dans un match
-    @PostMapping("/inscrire/{matchId}/{matricule}")
-    public ResponseEntity<ParticipantMatch> inscrire(
-            @PathVariable Long matchId,
-            @PathVariable String matricule) {
-        return ResponseEntity.ok(participantService.inscrire(matchId, matricule));
+    @GetMapping("/membre/{membreId}")
+    public List<ParticipantMatch> getByMembre(@PathVariable Long membreId) {
+        return participantMatchService.getByMembre(membreId);
     }
 
-    // Payer sa place
-    @PutMapping("/payer/{participantId}")
-    public ResponseEntity<ParticipantMatch> payer(@PathVariable Long participantId) {
-        return ResponseEntity.ok(participantService.payer(participantId));
+    @PostMapping("/inscrire")
+    public ParticipantMatch inscrire(@RequestBody Map<String, String> body) {
+        Long matchId = Long.parseLong(body.get("matchId"));
+        Long membreId = Long.parseLong(body.get("membreId"));
+        boolean ajouteParOrganisateur = Boolean.parseBoolean(
+                body.getOrDefault("ajouteParOrganisateur", "false")
+        );
+
+        return participantMatchService.inscrire(matchId, membreId, ajouteParOrganisateur);
+    }
+
+    @PutMapping("/{participantId}/payer")
+    public ParticipantMatch payer(@PathVariable Long participantId,
+                                  @RequestBody Map<String, String> body) {
+        BigDecimal montant = new BigDecimal(body.get("montant"));
+        return participantMatchService.payer(participantId, montant);
+    }
+
+    @PutMapping("/{participantId}/annuler")
+    public ParticipantMatch annulerParticipation(@PathVariable Long participantId) {
+        return participantMatchService.annulerParticipation(participantId);
+    }
+
+    @DeleteMapping("/{participantId}")
+    public void supprimer(@PathVariable Long participantId) {
+        participantMatchService.supprimer(participantId);
     }
 }

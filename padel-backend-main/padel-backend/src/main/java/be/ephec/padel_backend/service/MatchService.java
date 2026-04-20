@@ -62,12 +62,12 @@ public class MatchService {
         Creneau creneau = creneauRepository.findById(creneauId)
                 .orElseThrow(() -> new RuntimeException("Créneau introuvable : " + creneauId));
 
-        if (matchPadelRepository.existsByCreneauId(creneauId)) {
-            throw new RuntimeException("Ce créneau est déjà réservé");
-        }
-
         if (Boolean.FALSE.equals(creneau.getDisponible())) {
             throw new RuntimeException("Ce créneau n'est pas disponible");
+        }
+
+        if (matchPadelRepository.existsByCreneauId(creneauId)) {
+            throw new RuntimeException("Ce créneau est déjà réservé");
         }
 
         Long siteId = creneau.getTerrain().getSite().getId();
@@ -92,10 +92,10 @@ public class MatchService {
         match.setEstDevenuPublicAutomatiquement(false);
         match.setSoldeOrganisateurRegle(false);
 
-        MatchPadel savedMatch = matchPadelRepository.save(match);
+        MatchPadel matchSauve = matchPadelRepository.save(match);
 
         ParticipantMatch participantOrganisateur = new ParticipantMatch();
-        participantOrganisateur.setMatchPadel(savedMatch);
+        participantOrganisateur.setMatchPadel(matchSauve);
         participantOrganisateur.setMembre(organisateur);
         participantOrganisateur.setMontantPaye(BigDecimal.ZERO);
         participantOrganisateur.setAjouteParOrganisateur(false);
@@ -111,7 +111,7 @@ public class MatchService {
         creneau.setDisponible(false);
         creneauRepository.save(creneau);
 
-        return savedMatch;
+        return matchSauve;
     }
 
     public ParticipantMatch ajouterParticipantPrive(Long matchId, Long membreId, Long organisateurId) {
@@ -175,12 +175,66 @@ public class MatchService {
     public MatchPadel annulerMatch(Long matchId) {
         MatchPadel match = getMatchById(matchId);
         match.setStatut(StatutMatch.ANNULE);
-        MatchPadel updatedMatch = matchPadelRepository.save(match);
+        MatchPadel matchMisAJour = matchPadelRepository.save(match);
 
         Creneau creneau = match.getCreneau();
         creneau.setDisponible(true);
         creneauRepository.save(creneau);
 
-        return updatedMatch;
+        return matchMisAJour;
+    }
+
+    public MatchPadel updateMatch(Long id, MatchPadel matchDetails) {
+        MatchPadel match = getMatchById(id);
+
+        if (matchDetails.getTypeMatch() != null) {
+            match.setTypeMatch(matchDetails.getTypeMatch());
+        }
+
+        if (matchDetails.getStatut() != null) {
+            match.setStatut(matchDetails.getStatut());
+        }
+
+        if (matchDetails.getMontantTotal() != null) {
+            match.setMontantTotal(matchDetails.getMontantTotal());
+        }
+
+        if (matchDetails.getMontantParJoueur() != null) {
+            match.setMontantParJoueur(matchDetails.getMontantParJoueur());
+        }
+
+        if (matchDetails.getNombreMaxJoueurs() != null) {
+            match.setNombreMaxJoueurs(matchDetails.getNombreMaxJoueurs());
+        }
+
+        return matchPadelRepository.save(match);
+    }
+
+    public MatchPadel updatePrixMatch(Long id, BigDecimal nouveauPrix) {
+        MatchPadel match = getMatchById(id);
+        match.setMontantTotal(nouveauPrix);
+
+        if (match.getNombreMaxJoueurs() != null && match.getNombreMaxJoueurs() > 0) {
+            BigDecimal montantParJoueur = nouveauPrix.divide(
+                    BigDecimal.valueOf(match.getNombreMaxJoueurs()),
+                    2,
+                    java.math.RoundingMode.HALF_UP
+            );
+            match.setMontantParJoueur(montantParJoueur);
+        }
+
+        return matchPadelRepository.save(match);
+    }
+
+    public void deleteMatch(Long id) {
+        MatchPadel match = getMatchById(id);
+
+        if (match.getCreneau() != null) {
+            Creneau creneau = match.getCreneau();
+            creneau.setDisponible(true);
+            creneauRepository.save(creneau);
+        }
+
+        matchPadelRepository.delete(match);
     }
 }

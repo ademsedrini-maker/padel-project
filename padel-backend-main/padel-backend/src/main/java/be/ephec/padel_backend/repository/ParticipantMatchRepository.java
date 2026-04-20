@@ -1,8 +1,6 @@
 package be.ephec.padel_backend.repository;
 
 import be.ephec.padel_backend.enums.StatutParticipant;
-import be.ephec.padel_backend.model.MatchPadel;
-import be.ephec.padel_backend.model.Membre;
 import be.ephec.padel_backend.model.ParticipantMatch;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -11,27 +9,17 @@ import java.util.Optional;
 
 public interface ParticipantMatchRepository extends JpaRepository<ParticipantMatch, Long> {
 
-    // Par match (objet)
-    List<ParticipantMatch> findByMatch(MatchPadel match);
+    List<ParticipantMatch> findByMatchPadelId(Long matchId);
 
-    // Par membre (objet)
-    List<ParticipantMatch> findByMembre(Membre membre);
+    List<ParticipantMatch> findByMembreId(Long membreId);
 
-    // Par match + statut
-    List<ParticipantMatch> findByMatchAndStatut(MatchPadel match, StatutParticipant statut);
+    List<ParticipantMatch> findByMatchPadelIdAndStatut(Long matchId, StatutParticipant statut);
 
-    // Compter les participants d'un match
-    long countByMatch(MatchPadel match);
+    long countByMatchPadelId(Long matchId);
 
-    // Compter les participants d'un match par statut (ex: combien ont PAYE)
-    long countByMatchAndStatut(MatchPadel match, StatutParticipant statut);
+    long countByMatchPadelIdAndStatut(Long matchId, StatutParticipant statut);
 
-    // Vérifier si un membre est déjà dans un match
-    boolean existsByMatchAndMembre(MatchPadel match, Membre membre);
+    boolean existsByMatchPadelIdAndMembreId(Long matchId, Long membreId);
 
-    // Trouver un participant spécifique dans un match
-    Optional<ParticipantMatch> findByMatchAndMembre(MatchPadel match, Membre membre);
-
-    // Par statut + plage de dates (utilisé par le scheduler)
-    List<ParticipantMatch> findByStatut(StatutParticipant statut);
+    Optional<ParticipantMatch> findByMatchPadelIdAndMembreId(Long matchId, Long membreId);
 }
