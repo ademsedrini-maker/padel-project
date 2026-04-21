@@ -3,17 +3,30 @@
 <div class="page">
   <h1>Terrains</h1>
 
-  <div *ngIf="erreur" class="alert-error">{{ erreur }}</div>
-
-  <div *ngIf="terrains.length === 0 && !erreur" class="empty">
+  <div *ngIf="chargement" class="empty">
     Chargement des terrains...
   </div>
 
-  <div class="terrains-grid">
+  <div *ngIf="erreur" class="alert-error">
+    {{ erreur }}
+  </div>
+
+  <div *ngIf="!chargement && !erreur && terrains.length === 0" class="empty">
+    Aucun terrain disponible.
+  </div>
+
+  <div class="terrains-grid" *ngIf="!chargement && terrains.length > 0">
     <div *ngFor="let t of terrains" class="terrain-card">
-      <h3>{{ t.nom }}</h3>
-      <p class="site-badge">{{ t.site }}</p>
-      <a [routerLink]="['/reservations']" class="btn-primary">Réserver</a>
+      <img [src]="t.imageUrl" [alt]="'Terrain ' + t.numero + ' - ' + t.siteNom" class="terrain-image" />
+
+      <h3>{{ t.siteNom }} - Terrain {{ t.numero }}</h3>
+      <p class="site-badge">{{ t.adresse }}</p>
+      <p>{{ t.description }}</p>
+      <p>Horaires : {{ t.heureOuverture }} - {{ t.heureFermeture }}</p>
+
+      <a [routerLink]="['/reservations']" class="btn-primary">
+        Réserver
+      </a>
     </div>
   </div>
 </div>

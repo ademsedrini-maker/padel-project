@@ -3,10 +3,12 @@ package be.ephec.padel_backend.service;
 import be.ephec.padel_backend.model.Terrain;
 import be.ephec.padel_backend.repository.TerrainRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional
 public class TerrainService {
 
     private final TerrainRepository terrainRepository;

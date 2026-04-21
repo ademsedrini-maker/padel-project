@@ -5,6 +5,17 @@ import { RouterLink } from '@angular/router';
 import { NavbarComponent } from '../../layout/navbar/navbar';
 import { Auth } from '../../core/services/auth';
 
+interface Terrain {
+  id: number;
+  numero: number;
+  siteNom: string;
+  adresse: string;
+  heureOuverture: string;
+  heureFermeture: string;
+  description: string;
+  imageUrl: string;
+}
+
 @Component({
   selector: 'app-terrains',
   standalone: true,
@@ -14,9 +25,9 @@ import { Auth } from '../../core/services/auth';
 })
 export class Terrains implements OnInit {
   private apiUrl = 'http://localhost:8080/api';
-  terrains: any[] = [];
+  terrains: Terrain[] = [];
   erreur: string | null = null;
-  chargement: boolean = false;
+  chargement = false;
 
   constructor(
     private http: HttpClient,
@@ -30,8 +41,9 @@ export class Terrains implements OnInit {
   chargerTerrains(): void {
     this.chargement = true;
     this.erreur = null;
-    this.http.get(`${this.apiUrl}/terrains`).subscribe({
-      next: (data: any) => {
+
+    this.http.get<Terrain[]>(`${this.apiUrl}/terrains`).subscribe({
+      next: (data) => {
         this.terrains = data;
         this.chargement = false;
       },

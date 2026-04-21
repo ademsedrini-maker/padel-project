@@ -44,7 +44,7 @@ public class TerrainController {
         var heureOuverture = terrain.getSite() != null ? terrain.getSite().getHeureOuverture() : null;
         var heureFermeture = terrain.getSite() != null ? terrain.getSite().getHeureFermeture() : null;
 
-        String description = "Terrain " + terrain.getNumero() + " situé sur le site de " + siteNom;
+        String description = "Terrain " + terrain.getNumero() + " disponible sur le site de " + siteNom + ".";
         String imageUrl = siteNom.equalsIgnoreCase("Bruxelles")
                 ? "assets/images/terrain-bruxelles.jpg"
                 : "assets/images/terrain-liege.jpg";

@@ -1,6 +1,6 @@
 package be.ephec.padel_backend.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,6 +22,6 @@ public class Terrain {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "site_id", nullable = false)
-    @JsonIgnoreProperties({"terrains", "membres"})
+    @JsonIgnore
     private Site site;
 }
