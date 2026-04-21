@@ -18,7 +18,7 @@ public class TerrainService {
     }
 
     public List<Terrain> getAllTerrains() {
-        return terrainRepository.findAll();
+        return terrainRepository.findAllWithSite();
     }
 
     public Terrain getTerrainById(Long id) {

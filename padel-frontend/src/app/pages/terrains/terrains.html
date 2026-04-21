@@ -2,6 +2,9 @@
 
 <div class="page">
   <h1>Terrains</h1>
+  <p class="intro">
+    Découvrez nos terrains à Bruxelles et à Liège, avec leurs horaires et leurs informations.
+  </p>
 
   <div *ngIf="chargement" class="empty">
     Chargement des terrains...
@@ -19,14 +22,16 @@
     <div *ngFor="let t of terrains" class="terrain-card">
       <img [src]="t.imageUrl" [alt]="'Terrain ' + t.numero + ' - ' + t.siteNom" class="terrain-image" />
 
-      <h3>{{ t.siteNom }} - Terrain {{ t.numero }}</h3>
-      <p class="site-badge">{{ t.adresse }}</p>
-      <p>{{ t.description }}</p>
-      <p>Horaires : {{ t.heureOuverture }} - {{ t.heureFermeture }}</p>
+      <div class="terrain-content">
+        <h3>{{ t.siteNom }} - Terrain {{ t.numero }}</h3>
+        <p class="site-badge">{{ t.adresse }}</p>
+        <p>{{ t.description }}</p>
+        <p><strong>Horaires :</strong> {{ t.heureOuverture }} - {{ t.heureFermeture }}</p>
 
-      <a [routerLink]="['/reservations']" class="btn-primary">
-        Réserver
-      </a>
+        <a [routerLink]="['/reservations']" class="btn-primary">
+          Réserver
+        </a>
+      </div>
     </div>
   </div>
 </div>
