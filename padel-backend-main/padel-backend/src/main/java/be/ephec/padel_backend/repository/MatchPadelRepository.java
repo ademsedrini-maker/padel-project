@@ -24,7 +24,7 @@ public interface MatchPadelRepository extends JpaRepository<MatchPadel, Long> {
 
     // Par plage de dates → utilisé par le scheduler
     // ⚠️ "DateHeure" correspond au champ dans Creneau.java
-    List<MatchPadel> findByCreneauDateHeureBetween(LocalDateTime debut, LocalDateTime fin);
+    List<MatchPadel> findByCreneauDateHeureDebutBetween(LocalDateTime start, LocalDateTime end);
 
     // Par type + statut combinés
     List<MatchPadel> findByTypeMatchAndStatut(TypeMatch typeMatch, StatutMatch statut);
