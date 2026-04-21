@@ -1,14 +1,29 @@
-<div class="home-hero">
-  <div class="hero-image">
-    <img src="image.jpg" alt="Terrain de padel" />
-  </div>
+<div class="home-container">
+  <div class="home-card">
+    <div class="home-logo">
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="56" height="56">
+        <circle cx="24" cy="24" r="22" fill="#1a472a"/>
+        <ellipse cx="24" cy="24" rx="14" ry="6" stroke="white" stroke-width="2" fill="none"/>
+        <ellipse cx="24" cy="24" rx="6" ry="14" stroke="white" stroke-width="2" fill="none"/>
+        <circle cx="24" cy="24" r="3" fill="white"/>
+      </svg>
+      <h1>Mon Padel</h1>
+    </div>
 
-  <div class="hero-content">
-    <h1>MON PADEL</h1>
+    <p class="home-subtitle">Bienvenue sur la plateforme de réservation</p>
 
-    <div class="hero-buttons">
-      <a routerLink="/login-membre" class="btn btn-primary">Login membre</a>
-      <a routerLink="/login-admin" class="btn btn-secondary">Login admin</a>
+    <div class="home-actions">
+      <a routerLink="/login-membre" class="btn-membre">
+        <span>👤</span> Connexion Membre
+      </a>
+      <a routerLink="/login-admin" class="btn-admin">
+        <span>🔧</span> Connexion Admin
+      </a>
+    </div>
+
+    <div class="home-register">
+      <span>Pas encore membre ?</span>
+      <a routerLink="/register">Créer un compte</a>
     </div>
   </div>
 </div>

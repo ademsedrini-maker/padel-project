@@ -1,36 +1,42 @@
 <div class="login-container">
-  <h1>Connexion membre</h1>
+  <div class="login-card">
+    <div class="login-header">
+      <svg viewBox="0 0 48 48" fill="none" width="48" height="48">
+        <circle cx="24" cy="24" r="22" fill="#1a472a"/>
+        <ellipse cx="24" cy="24" rx="14" ry="6" stroke="white" stroke-width="2" fill="none"/>
+        <ellipse cx="24" cy="24" rx="6" ry="14" stroke="white" stroke-width="2" fill="none"/>
+        <circle cx="24" cy="24" r="3" fill="white"/>
+      </svg>
+      <h2>Connexion Membre</h2>
+      <p>Entrez votre matricule pour accéder à votre espace</p>
+    </div>
 
-  <form (ngSubmit)="onLogin()">
-    <label for="matricule">Matricule</label>
-    <input
-      id="matricule"
-      name="matricule"
-      type="text"
-      [(ngModel)]="matricule"
-      required
-    />
+    <form (ngSubmit)="onLogin()" #loginForm="ngForm">
+      <div class="form-group">
+        <label for="matricule">Matricule</label>
+        <input
+          id="matricule"
+          name="matricule"
+          type="text"
+          [(ngModel)]="matricule"
+          placeholder="Ex: G0001, S0001, L0001"
+          required
+          class="form-input"
+        />
+        <span class="form-hint">Commence par G (global), S (site) ou L (libre)</span>
+      </div>
 
-    <button type="submit">Se connecter</button>
+      <div class="error-msg" *ngIf="errorMessage">
+        ⚠️ {{ errorMessage }}
+      </div>
 
-    <p class="error" *ngIf="errorMessage">
-      {{ errorMessage }}
-    </p>
+      <button type="submit" class="btn-login">
+        Se connecter
+      </button>
+    </form>
 
-    <p class="register-link">
-      <a routerLink="/register">Créer mon compte</a>
-    </p>
-  </form>
-
-  <p class="test-link">
-    <a routerLink="/dashboard">Accéder directement au dashboard</a>
-  </p>
-
-  <p class="test-link">
-    <a routerLink="/reservations">Aller directement à la réservation</a>
-  </p>
-
-  <p class="back">
-    <a routerLink="/">← Retour</a>
-  </p>
+    <div class="login-footer">
+      <a routerLink="/">← Retour à l'accueil</a>
+    </div>
+  </div>
 </div>

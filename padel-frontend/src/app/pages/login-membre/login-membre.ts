@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
 import { Auth } from '../../core/services/auth';
 
 @Component({
   selector: 'app-login-membre',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [FormsModule, CommonModule, RouterLink],
   templateUrl: './login-membre.html',
   styleUrl: './login-membre.css'
 })
@@ -15,22 +15,26 @@ export class LoginMembre {
   matricule = '';
   errorMessage = '';
 
-  constructor(
-    private authService: Auth,
-    private router: Router
-  ) {}
+  constructor(private auth: Auth, private router: Router) {}
 
   onLogin(): void {
-    this.errorMessage = '';
-
     if (!this.matricule.trim()) {
-      this.errorMessage = 'Veuillez entrer un matricule';
+      this.errorMessage = 'Veuillez entrer votre matricule';
       return;
     }
 
-    this.authService.login({ matricule: this.matricule }).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
-      error: () => this.errorMessage = 'Matricule introuvable'
+    this.auth.login({ matricule: this.matricule.trim() }).subscribe({
+      next: (user) => {
+        this.errorMessage = '';
+        this.router.navigate(['/dashboard']);
+      },
+      error: (err) => {
+        if (err.status === 404) {
+          this.errorMessage = 'Matricule introuvable. Vérifiez votre saisie.';
+        } else {
+          this.errorMessage = 'Erreur de connexion. Réessayez plus tard.';
+        }
+      }
     });
   }
 }
