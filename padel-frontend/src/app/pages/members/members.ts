@@ -13,6 +13,9 @@ interface Membre {
   typeMembre: string;
   site?: string;
   solde: number;
+  telephone?: string;
+  adresse?: string;
+  dateNaissance?: string;
 }
 
 @Component({
@@ -24,8 +27,11 @@ interface Membre {
 })
 export class Members implements OnInit {
   private apiUrl = 'http://localhost:8080/api';
+
   membres: Membre[] = [];
+  profil: Membre | null = null;
   erreur: string = '';
+  chargement = true;
 
   constructor(
     private http: HttpClient,
@@ -33,14 +39,23 @@ export class Members implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const endpoint = this.authService.isAdminGlobal()
-      ? `${this.apiUrl}/membres`
-      : `${this.apiUrl}/membres/site/${this.authService.getSiteAdmin()}`;
+    if (this.authService.isAdmin()) {
+      const endpoint = this.authService.isAdminGlobal()
+        ? `${this.apiUrl}/membres`
+        : `${this.apiUrl}/membres/site/${this.authService.getSiteAdmin()}`;
 
-    this.http.get(endpoint).subscribe({
-      next: (data: any) => this.membres = data,
-      error: () => this.erreur = 'Impossible de charger les membres.'
-    });
+      this.http.get<Membre[]>(endpoint).subscribe({
+        next: (data) => { this.membres = data; this.chargement = false; },
+        error: () => { this.erreur = 'Impossible de charger les membres.'; this.chargement = false; }
+      });
+
+    } else if (this.authService.isMember()) {
+      const matricule = this.authService.getMatricule();
+      this.http.get<Membre>(`${this.apiUrl}/membres/${matricule}`).subscribe({
+        next: (data) => { this.profil = data; this.chargement = false; },
+        error: () => { this.erreur = 'Impossible de charger votre profil.'; this.chargement = false; }
+      });
+    }
   }
 
   getTypeBadgeClass(type: string): string {

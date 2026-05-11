@@ -1,55 +1,99 @@
 <app-navbar></app-navbar>
 
-<div class="page">
-  <h1>Gestion des membres</h1>
+<div class="membres-container">
 
-  <div *ngIf="erreur" class="alert-error">
-    {{ erreur }}
+  <!-- ===== VUE ADMIN ===== -->
+  @if (authService.isAdmin()) {
+  <div class="page-header">
+    <h1>Gestion des membres</h1>
+    @if (authService.isAdminGlobal()) {
+    <span class="badge badge-global">Vue globale — tous les sites</span>
+    } @else {
+    <span class="badge badge-site">Site : <strong>{{ authService.getSiteAdmin() }}</strong></span>
+    }
   </div>
 
-  <div *ngIf="authService.isAdminGlobal()" class="info-banner">
-    Vue globale — tous les sites
+  @if (erreur) { <p class="alert alert-erreur">{{ erreur }}</p> }
+  @if (membres.length === 0 && !erreur) { <p class="vide">Aucun membre trouvé.</p> }
+
+  @if (membres.length > 0) {
+  <div class="table-wrapper">
+    <table>
+      <thead>
+      <tr>
+        <th>Matricule</th>
+        <th>Nom</th>
+        <th>Prénom</th>
+        <th>Email</th>
+        <th>Type</th>
+        <th>Site</th>
+        <th>Solde</th>
+      </tr>
+      </thead>
+      <tbody>
+      @for (m of membres; track m.id) {
+      <tr>
+        <td><code>{{ m.matricule }}</code></td>
+        <td>{{ m.nom }}</td>
+        <td>{{ m.prenom }}</td>
+        <td>{{ m.email }}</td>
+        <td><span [class]="'badge ' + getTypeBadgeClass(m.typeMembre)">{{ m.typeMembre }}</span></td>
+        <td>{{ m.site || '—' }}</td>
+        <td>{{ m.solde | number:'1.2-2' }} €</td>
+      </tr>
+      }
+      </tbody>
+    </table>
+  </div>
+  }
+  }
+
+  <!-- ===== VUE MEMBRE — MON PROFIL ===== -->
+  @if (authService.isMember()) {
+  <div class="page-header">
+    <h1>Mon Profil</h1>
   </div>
 
-  <div *ngIf="authService.isAdminSite()" class="info-banner">
-    Site : <strong>{{ authService.getSiteAdmin() }}</strong>
+  @if (erreur) { <p class="alert alert-erreur">{{ erreur }}</p> }
+  @if (chargement) { <p class="vide">Chargement...</p> }
+
+  @if (!chargement && profil) {
+  <div class="profil-card">
+    <div class="profil-header">
+      <div class="avatar">{{ profil.prenom[0] }}{{ profil.nom[0] }}</div>
+      <div>
+        <h2>{{ profil.prenom }} {{ profil.nom }}</h2>
+        <code class="matricule">{{ profil.matricule }}</code>
+        <span [class]="'badge ' + getTypeBadgeClass(profil.typeMembre)">{{ profil.typeMembre }}</span>
+      </div>
+      <div class="solde" [class.negatif]="profil.solde < 0">
+        <span class="solde-label">Solde</span>
+        <span class="solde-montant">{{ profil.solde | number:'1.2-2' }} €</span>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="info-grid">
+      <div class="info-item">
+        <span class="label">Email</span>
+        <span>{{ profil.email }}</span>
+      </div>
+      <div class="info-item">
+        <span class="label">Téléphone</span>
+        <span>{{ profil.telephone || '—' }}</span>
+      </div>
+      <div class="info-item">
+        <span class="label">Date de naissance</span>
+        <span>{{ profil.dateNaissance ? (profil.dateNaissance | date:'dd/MM/yyyy') : '—' }}</span>
+      </div>
+      <div class="info-item">
+        <span class="label">Adresse</span>
+        <span>{{ profil.adresse || '—' }}</span>
+      </div>
+    </div>
   </div>
+  }
+  }
 
-  <div *ngIf="membres.length === 0 && !erreur" class="empty">
-    Aucun membre trouvé.
-  </div>
-
-  <table *ngIf="membres.length > 0">
-    <thead>
-    <tr>
-      <th>Matricule</th>
-      <th>Nom</th>
-      <th>Prénom</th>
-      <th>Email</th>
-      <th>Type</th>
-      <th *ngIf="authService.isAdminGlobal()">Site</th>
-      <th>Solde</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    <tr *ngFor="let m of membres">
-      <td><code>{{ m.matricule }}</code></td>
-      <td>{{ m.nom }}</td>
-      <td>{{ m.prenom }}</td>
-      <td>{{ m.email }}</td>
-      <td>
-          <span [class]="'badge ' + getTypeBadgeClass(m.typeMembre)">
-            {{ m.typeMembre }}
-          </span>
-      </td>
-      <td *ngIf="authService.isAdminGlobal()">
-        {{ m.site || '—' }}
-      </td>
-      <td [class]="m.solde < 0 ? 'solde-negatif' : 'solde-positif'">
-        {{ m.solde | number:'1.2-2' }} €
-      </td>
-    </tr>
-    </tbody>
-  </table>
 </div>

@@ -20,7 +20,7 @@ public class MembreController {
         this.membreService = membreService;
     }
 
-    // ─── LOGIN MEMBRE ─────────────────────────────────────────────────────────
+    // ─── LOGIN ────────────────────────────────────────────────────────────────
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginMembreRequest request) {
@@ -37,32 +37,41 @@ public class MembreController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Membre membre) {
         try {
-            // Génération du préfixe selon le type
             String prefix = switch (membre.getTypeMembre()) {
                 case GLOBAL -> "G";
                 case SITE   -> "S";
                 case LIBRE  -> "L";
                 default     -> "M";
             };
-
             String matricule = prefix + String.format("%04d", membreService.countMembres() + 1);
             membre.setMatricule(matricule);
-
             Membre saved = membreService.saveMembre(membre);
             return ResponseEntity.status(HttpStatus.CREATED).body(saved);
-
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Erreur lors de la création du compte : " + e.getMessage());
         }
     }
 
-    // ─── CRUD ─────────────────────────────────────────────────────────────────
+    // ─── GET ALL ──────────────────────────────────────────────────────────────
 
     @GetMapping
     public List<Membre> getAllMembres() {
         return membreService.getAllMembres();
     }
+
+    // ─── GET BY SITE ──────────────────────────────────────────────────────────
+
+    @GetMapping("/site/{siteId}")
+    public ResponseEntity<List<Membre>> getMembresBySite(@PathVariable Long siteId) {
+        try {
+            return ResponseEntity.ok(membreService.getMembresBySite(siteId));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
+    // ─── GET BY MATRICULE ─────────────────────────────────────────────────────
 
     @GetMapping("/{matricule}")
     public ResponseEntity<?> getByMatricule(@PathVariable String matricule) {
@@ -72,6 +81,8 @@ public class MembreController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Matricule introuvable");
         }
     }
+
+    // ─── CREATE (admin) ───────────────────────────────────────────────────────
 
     @PostMapping
     public ResponseEntity<Membre> createMembre(@RequestBody Membre membre) {

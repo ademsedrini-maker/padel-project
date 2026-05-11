@@ -1,33 +1,37 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
 import { NavbarComponent } from '../../layout/navbar/navbar';
 import { Auth } from '../../core/services/auth';
 
-interface Terrain {
+interface Membre {
   id: number;
-  numero: number;
-  siteNom: string;
-  adresse: string;
-  heureOuverture: string;
-  heureFermeture: string;
-  description: string;
-  imageUrl: string;
+  nom: string;
+  prenom: string;
+  matricule: string;
+  email: string;
+  typeMembre: string;
+  site?: string;
+  solde: number;
+  telephone?: string;
+  adresse?: string;
+  dateNaissance?: string;
 }
 
 @Component({
-  selector: 'app-terrains',
+  selector: 'app-members',
   standalone: true,
-  imports: [CommonModule, RouterLink, NavbarComponent],
-  templateUrl: './terrains.html',
-  styleUrls: ['./terrains.css']
+  imports: [CommonModule, NavbarComponent],
+  templateUrl: './members.html',
+  styleUrls: ['./members.css']
 })
-export class Terrains implements OnInit {
+export class Members implements OnInit {
   private apiUrl = 'http://localhost:8080/api';
-  terrains: Terrain[] = [];
-  erreur: string | null = null;
-  chargement = false;
+
+  membres: Membre[] = [];
+  profil: Membre | null = null;
+  erreur: string = '';
+  chargement = true;
 
   constructor(
     private http: HttpClient,
@@ -35,22 +39,31 @@ export class Terrains implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.chargerTerrains();
+    if (this.authService.isAdmin()) {
+      const endpoint = this.authService.isAdminGlobal()
+        ? `${this.apiUrl}/membres`
+        : `${this.apiUrl}/membres/site/${this.authService.getSiteAdmin()}`;
+
+      this.http.get<Membre[]>(endpoint).subscribe({
+        next: (data) => { this.membres = data; this.chargement = false; },
+        error: () => { this.erreur = 'Impossible de charger les membres.'; this.chargement = false; }
+      });
+
+    } else if (this.authService.isMember()) {
+      const matricule = this.authService.getMatricule();
+      this.http.get<Membre>(`${this.apiUrl}/membres/${matricule}`).subscribe({
+        next: (data) => { this.profil = data; this.chargement = false; },
+        error: () => { this.erreur = 'Impossible de charger votre profil.'; this.chargement = false; }
+      });
+    }
   }
 
-  chargerTerrains(): void {
-    this.chargement = true;
-    this.erreur = null;
-
-    this.http.get<Terrain[]>(`${this.apiUrl}/terrains`).subscribe({
-      next: (data) => {
-        this.terrains = data;
-        this.chargement = false;
-      },
-      error: () => {
-        this.erreur = 'Impossible de charger les terrains.';
-        this.chargement = false;
-      }
-    });
+  getTypeBadgeClass(type: string): string {
+    switch (type) {
+      case 'GLOBAL': return 'badge-global';
+      case 'SITE':   return 'badge-site';
+      case 'LIBRE':  return 'badge-libre';
+      default:       return '';
+    }
   }
 }
