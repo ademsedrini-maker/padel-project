@@ -13,7 +13,9 @@ interface Terrain {
 
 interface Creneau {
   id: number;
-  dateHeure: string;
+  dateHeureDebut: string;
+  dateHeureFin: string;
+  disponible: boolean;
   terrain: Terrain;
 }
 
@@ -65,7 +67,7 @@ export class Reservations implements OnInit {
         const user = this.authService.currentUser();
         const now = new Date();
 
-        let creneauxDispos = data.filter(c => new Date(c.dateHeure) > now);
+        let creneauxDispos = data.filter(c => c.disponible && new Date(c.dateHeureDebut) > now);
 
         if (user?.typeMembre === 'SITE' && user?.site) {
           creneauxDispos = creneauxDispos.filter(c => c.terrain.site === user.site);
@@ -92,16 +94,13 @@ export class Reservations implements OnInit {
   filtrerCreneaux(): void {
     this.creneauxFiltres = this.tousCreneaux.filter(c => {
       const matchDate = this.dateSelectionnee
-        ? c.dateHeure.startsWith(this.dateSelectionnee)
+        ? c.dateHeureDebut.startsWith(this.dateSelectionnee)
         : true;
-
       const matchTerrain = this.terrainSelectionne
         ? c.terrain.id === +this.terrainSelectionne
         : true;
-
       return matchDate && matchTerrain;
     });
-
     this.creneauSelectionne = null;
   }
 
@@ -109,7 +108,7 @@ export class Reservations implements OnInit {
     const matricule = this.authService.currentUser()?.matricule;
     if (!matricule) return;
 
-    this.http.get<Reservation[]>(`${this.apiUrl}/matches/membre/${matricule}`).subscribe({
+    this.http.get<Reservation[]>(`${this.apiUrl}/matchs/membre/${matricule}`).subscribe({
       next: (data) => {
         this.mesReservations = data;
       },
@@ -120,14 +119,14 @@ export class Reservations implements OnInit {
   get reservationsFutures(): Reservation[] {
     const now = new Date();
     return this.mesReservations.filter(r =>
-      new Date(r.creneau.dateHeure) >= now && r.statut !== 'ANNULE'
+      new Date(r.creneau.dateHeureDebut) >= now && r.statut !== 'ANNULE'
     );
   }
 
   get reservationsPassees(): Reservation[] {
     const now = new Date();
     return this.mesReservations.filter(r =>
-      new Date(r.creneau.dateHeure) < now || r.statut === 'ANNULE'
+      new Date(r.creneau.dateHeureDebut) < now || r.statut === 'ANNULE'
     );
   }
 
@@ -135,25 +134,18 @@ export class Reservations implements OnInit {
     this.message = '';
     this.erreur = '';
 
-    const matricule = this.authService.currentUser()?.matricule;
-
-    if (!matricule) {
-      this.erreur = 'Vous devez être connecté.';
-      return;
-    }
-
-    if (!this.creneauSelectionne) {
-      this.erreur = 'Veuillez sélectionner un créneau.';
-      return;
-    }
+    const user = this.authService.currentUser();
+    if (!user?.matricule) { this.erreur = 'Vous devez être connecté.'; return; }
+    if (!this.creneauSelectionne) { this.erreur = 'Veuillez sélectionner un créneau.'; return; }
+    if (!user.id) { this.erreur = 'Impossible de récupérer votre identifiant.'; return; }
 
     const body = {
-      creneauId: this.creneauSelectionne,
-      organisateurMatricule: matricule,
+      organisateurId: user.id.toString(),
+      creneauId: this.creneauSelectionne.toString(),
       typeMatch: this.typeMatch
     };
 
-    this.http.post(`${this.apiUrl}/matches`, body).subscribe({
+    this.http.post<Reservation>(`${this.apiUrl}/matchs/create`, body).subscribe({
       next: () => {
         this.message = '✅ Réservation effectuée avec succès !';
         this.creneauSelectionne = null;
@@ -172,7 +164,7 @@ export class Reservations implements OnInit {
   annuler(reservationId: number): void {
     if (!confirm('Confirmer l\'annulation ?')) return;
 
-    this.http.delete(`${this.apiUrl}/matches/${reservationId}`).subscribe({
+    this.http.put(`${this.apiUrl}/matchs/${reservationId}/annuler`, {}).subscribe({
       next: () => {
         this.message = 'Réservation annulée.';
         this.chargerMesReservations();
@@ -196,42 +188,29 @@ export class Reservations implements OnInit {
 
   getStatutClass(statut: string): string {
     switch (statut) {
-      case 'EN_ATTENTE':
-        return 'badge-attente';
-      case 'CONFIRME':
-        return 'badge-confirme';
-      case 'ANNULE':
-        return 'badge-annule';
-      default:
-        return '';
+      case 'EN_ATTENTE': return 'badge-attente';
+      case 'CONFIRME':   return 'badge-confirme';
+      case 'ANNULE':     return 'badge-annule';
+      default:           return '';
     }
   }
 
   getStatutLabel(statut: string): string {
     switch (statut) {
-      case 'EN_ATTENTE':
-        return '⏳ En attente';
-      case 'CONFIRME':
-        return '✅ Confirmé';
-      case 'ANNULE':
-        return '❌ Annulé';
-      default:
-        return statut;
+      case 'EN_ATTENTE': return '⏳ En attente';
+      case 'CONFIRME':   return '✅ Confirmé';
+      case 'ANNULE':     return '❌ Annulé';
+      default:           return statut;
     }
   }
 
   getTypeMembreInfo(): string {
     const user = this.authService.currentUser();
-
     switch (user?.typeMembre) {
-      case 'GLOBAL':
-        return '🌍 Membre Global — accès à tous les sites';
-      case 'SITE':
-        return `🏠 Membre Site — accès au site ${user.site} uniquement`;
-      case 'LIBRE':
-        return '🎟️ Membre Libre — accès à tous les sites';
-      default:
-        return '';
+      case 'GLOBAL': return '🌍 Membre Global — accès à tous les sites';
+      case 'SITE':   return `🏠 Membre Site — accès au site ${user.site} uniquement`;
+      case 'LIBRE':  return '🎟️ Membre Libre — accès à tous les sites';
+      default:       return '';
     }
   }
 

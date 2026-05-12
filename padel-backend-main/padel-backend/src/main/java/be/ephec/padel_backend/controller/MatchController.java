@@ -2,9 +2,11 @@ package be.ephec.padel_backend.controller;
 
 import be.ephec.padel_backend.enums.TypeMatch;
 import be.ephec.padel_backend.model.MatchPadel;
+import be.ephec.padel_backend.model.Membre;
 import be.ephec.padel_backend.model.ParticipantMatch;
 import be.ephec.padel_backend.service.MatchService;
 import be.ephec.padel_backend.service.MembreService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,14 +25,16 @@ public class MatchController {
         this.membreService = membreService;
     }
 
+    // ─── LECTURE ──────────────────────────────────────────────────────────────
+
     @GetMapping
     public List<MatchPadel> getAllMatchs() {
         return matchService.getAllMatchs();
     }
 
     @GetMapping("/{id}")
-    public MatchPadel getMatchById(@PathVariable Long id) {
-        return matchService.getMatchById(id);
+    public ResponseEntity<MatchPadel> getMatchById(@PathVariable Long id) {
+        return ResponseEntity.ok(matchService.getMatchById(id));
     }
 
     @GetMapping("/publics")
@@ -48,34 +52,43 @@ public class MatchController {
         return matchService.getMatchsByOrganisateur(organisateurId);
     }
 
+    // ─── ENDPOINT MANQUANT — matchs d'un membre par matricule ─────────────────
+
+    @GetMapping("/membre/{matricule}")
+    public List<MatchPadel> getMatchsByMembreMatricule(@PathVariable String matricule) {
+        Membre membre = membreService.getMembreByMatricule(matricule);
+        return matchService.getMatchsByOrganisateur(membre.getId());
+    }
+
+    // ─── ACTIONS ──────────────────────────────────────────────────────────────
+
     @PostMapping("/create")
-    public MatchPadel createMatch(@RequestBody Map<String, String> body) {
+    public ResponseEntity<MatchPadel> createMatch(@RequestBody Map<String, String> body) {
         Long organisateurId = Long.parseLong(body.get("organisateurId"));
         Long creneauId = Long.parseLong(body.get("creneauId"));
         TypeMatch typeMatch = TypeMatch.valueOf(body.get("typeMatch"));
-
-        return matchService.createMatch(organisateurId, creneauId, typeMatch);
+        return ResponseEntity.ok(matchService.createMatch(organisateurId, creneauId, typeMatch));
     }
 
     @PostMapping("/{matchId}/ajouter-participant-prive")
-    public ParticipantMatch ajouterParticipantPrive(@PathVariable Long matchId,
-                                                    @RequestBody Map<String, String> body) {
+    public ResponseEntity<ParticipantMatch> ajouterParticipantPrive(
+            @PathVariable Long matchId,
+            @RequestBody Map<String, String> body) {
         Long membreId = Long.parseLong(body.get("membreId"));
         Long organisateurId = Long.parseLong(body.get("organisateurId"));
-
-        return matchService.ajouterParticipantPrive(matchId, membreId, organisateurId);
+        return ResponseEntity.ok(matchService.ajouterParticipantPrive(matchId, membreId, organisateurId));
     }
 
     @PostMapping("/{matchId}/inscription-public")
-    public ParticipantMatch inscrireJoueurMatchPublic(@PathVariable Long matchId,
-                                                      @RequestBody Map<String, String> body) {
+    public ResponseEntity<ParticipantMatch> inscrireJoueurMatchPublic(
+            @PathVariable Long matchId,
+            @RequestBody Map<String, String> body) {
         Long membreId = Long.parseLong(body.get("membreId"));
-
-        return matchService.inscrireJoueurMatchPublic(matchId, membreId);
+        return ResponseEntity.ok(matchService.inscrireJoueurMatchPublic(matchId, membreId));
     }
 
     @PutMapping("/{matchId}/annuler")
-    public MatchPadel annulerMatch(@PathVariable Long matchId) {
-        return matchService.annulerMatch(matchId);
+    public ResponseEntity<MatchPadel> annulerMatch(@PathVariable Long matchId) {
+        return ResponseEntity.ok(matchService.annulerMatch(matchId));
     }
 }
