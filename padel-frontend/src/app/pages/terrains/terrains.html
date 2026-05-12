@@ -1,37 +1,42 @@
 <app-navbar></app-navbar>
 
-<div class="page">
-  <h1>Terrains</h1>
-  <p class="intro">
-    Découvrez nos terrains à Bruxelles et à Liège, avec leurs horaires et leurs informations.
-  </p>
+<div class="terrains-container">
 
-  <div *ngIf="chargement" class="empty">
-    Chargement des terrains...
+  <div class="page-header">
+    <h1>Les Terrains</h1>
   </div>
 
-  <div *ngIf="erreur" class="alert-error">
-    {{ erreur }}
-  </div>
+  @if (erreur) {
+  <p class="alert alert-erreur">{{ erreur }}</p>
+  }
 
-  <div *ngIf="!chargement && !erreur && terrains.length === 0" class="empty">
-    Aucun terrain disponible.
-  </div>
+  @if (chargement) {
+  <p class="vide">Chargement...</p>
+  }
 
-  <div class="terrains-grid" *ngIf="!chargement && terrains.length > 0">
-    <div *ngFor="let t of terrains" class="terrain-card">
-      <img [src]="t.imageUrl" [alt]="'Terrain ' + t.numero + ' - ' + t.siteNom" class="terrain-image" />
+  @if (!chargement && terrains.length === 0 && !erreur) {
+  <p class="vide">Aucun terrain disponible.</p>
+  }
 
-      <div class="terrain-content">
-        <h3>{{ t.siteNom }} - Terrain {{ t.numero }}</h3>
-        <p class="site-badge">{{ t.adresse }}</p>
-        <p>{{ t.description }}</p>
-        <p><strong>Horaires :</strong> {{ t.heureOuverture }} - {{ t.heureFermeture }}</p>
-
-        <a [routerLink]="['/reservations']" class="btn-primary">
-          Réserver
-        </a>
+  @if (!chargement && terrains.length > 0) {
+  <div class="terrains-grid">
+    @for (t of terrains; track t.id) {
+    <div class="terrain-card">
+      <div class="terrain-numero">Terrain {{ t.numero }}</div>
+      <div class="terrain-info">
+        <span class="label">Site</span>
+        <span>{{ t.site?.nom || '—' }}</span>
+      </div>
+      <div class="terrain-info">
+        <span class="label">Adresse</span>
+        <span>{{ t.site?.adresse || '—' }}</span>
+      </div>
+      <div class="terrain-horaires">
+        🕗 {{ t.site?.heureOuverture || '—' }} → {{ t.site?.heureFermeture || '—' }}
       </div>
     </div>
+    }
   </div>
+  }
+
 </div>
