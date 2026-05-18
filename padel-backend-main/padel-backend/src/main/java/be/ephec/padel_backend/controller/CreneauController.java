@@ -1,9 +1,11 @@
 package be.ephec.padel_backend.controller;
 
+import be.ephec.padel_backend.dto.CreneauDTO;
 import be.ephec.padel_backend.model.Creneau;
 import be.ephec.padel_backend.repository.CreneauRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -18,12 +20,32 @@ public class CreneauController {
     }
 
     @GetMapping
-    public List<Creneau> getAll() {
-        return creneauRepository.findAll();
+    public List<CreneauDTO> getAll() {
+        List<Creneau> creneaux = creneauRepository.findAll();
+
+        return creneaux.stream()
+                .map(c -> new CreneauDTO(
+                        c.getId(),
+                        c.getDateHeureDebut().toString(),
+                        c.getDateHeureFin().toString(),
+                        c.getDisponible(),
+                        c.getTerrain().getNumero(),
+                        c.getTerrain().getSite().getNom()
+                ))
+                .toList();
     }
 
     @PostMapping
-    public ResponseEntity<Creneau> create(@RequestBody Creneau creneau) {
-        return ResponseEntity.ok(creneauRepository.save(creneau));
+    public ResponseEntity<CreneauDTO> create(@RequestBody Creneau creneau) {
+        Creneau saved = creneauRepository.save(creneau);
+        CreneauDTO dto = new CreneauDTO(
+                saved.getId(),
+                saved.getDateHeureDebut().toString(),
+                saved.getDateHeureFin().toString(),
+                saved.getDisponible(),
+                saved.getTerrain().getNumero(),
+                saved.getTerrain().getSite().getNom()
+        );
+        return ResponseEntity.ok(dto);
     }
 }
