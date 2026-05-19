@@ -74,8 +74,8 @@
              (click)="creneauSelectionne = c.id"
         >
           <div class="creneau-date">{{ formatDate(c.dateHeureDebut) }}</div>
-          <div class="creneau-terrain">{{ c.terrain.nom }}</div>
-          <div class="creneau-site">📍 {{ c.terrain.site }}</div>
+          <div class="creneau-terrain">Terrain {{ c.terrainNumero }}</div>
+          <div class="creneau-site">📍 {{ c.siteNom }}</div>
         </div>
         }
       </div>
@@ -127,7 +127,9 @@
       <div class="resa-card">
         <div class="resa-info">
           <div class="resa-date">📅 {{ formatDate(r.creneau.dateHeureDebut) }}</div>
-          <div class="resa-terrain">🏟️ {{ r.creneau.terrain.nom }} — {{ r.creneau.terrain.site }}</div>
+          <div class="resa-terrain">
+            🏟️ Terrain {{ r.creneau.terrainNumero }} — {{ r.creneau.siteNom }}
+          </div>
           <div class="resa-details">
             <span>{{ r.typeMatch === 'SIMPLE' ? '👤👤 Simple' : '👥👥 Double' }}</span>
             <span class="badge-statut" [ngClass]="getStatutClass(r.statut)">
@@ -158,7 +160,9 @@
       <div class="resa-card historique">
         <div class="resa-info">
           <div class="resa-date">📅 {{ formatDate(r.creneau.dateHeureDebut) }}</div>
-          <div class="resa-terrain">🏟️ {{ r.creneau.terrain.nom }} — {{ r.creneau.terrain.site }}</div>
+          <div class="resa-terrain">
+            🏟️ Terrain {{ r.creneau.terrainNumero }} — {{ r.creneau.siteNom }}
+          </div>
           <div class="resa-details">
             <span>{{ r.typeMatch === 'SIMPLE' ? '👤👤 Simple' : '👥👥 Double' }}</span>
             <span class="badge-statut" [ngClass]="getStatutClass(r.statut)">

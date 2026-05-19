@@ -21,14 +21,15 @@ public class CreneauController {
 
     @GetMapping
     public List<CreneauDTO> getAll() {
-        List<Creneau> creneaux = creneauRepository.findAll();
+        // On récupère les créneaux avec terrain + site déjà chargés
+        List<Creneau> creneaux = creneauRepository.findAllWithTerrainAndSite();
 
         return creneaux.stream()
                 .map(c -> new CreneauDTO(
                         c.getId(),
                         c.getDateHeureDebut().toString(),
                         c.getDateHeureFin().toString(),
-                        c.getDisponible(),
+                        c.getDisponible(),                  // ou isDisponible() selon ton getter
                         c.getTerrain().getNumero(),
                         c.getTerrain().getSite().getNom()
                 ))
@@ -38,14 +39,16 @@ public class CreneauController {
     @PostMapping
     public ResponseEntity<CreneauDTO> create(@RequestBody Creneau creneau) {
         Creneau saved = creneauRepository.save(creneau);
+
         CreneauDTO dto = new CreneauDTO(
                 saved.getId(),
                 saved.getDateHeureDebut().toString(),
                 saved.getDateHeureFin().toString(),
-                saved.getDisponible(),
+                saved.getDisponible(),                  // idem ici
                 saved.getTerrain().getNumero(),
                 saved.getTerrain().getSite().getNom()
         );
+
         return ResponseEntity.ok(dto);
     }
 }

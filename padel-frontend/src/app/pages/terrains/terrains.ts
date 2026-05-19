@@ -7,13 +7,12 @@ import { Auth } from '../../core/services/auth';
 interface Terrain {
   id: number;
   numero: number;
-  site?: {
-    id: number;
-    nom: string;
-    adresse: string;
-    heureOuverture: string;
-    heureFermeture: string;
-  };
+  siteNom: string;
+  adresse: string;
+  heureOuverture: string;
+  heureFermeture: string;
+  description: string;
+  imageUrl: string;
 }
 
 @Component({
@@ -37,8 +36,14 @@ export class Terrains implements OnInit {
 
   ngOnInit(): void {
     this.http.get<Terrain[]>(`${this.apiUrl}/terrains`).subscribe({
-      next: (data) => { this.terrains = data; this.chargement = false; },
-      error: () => { this.erreur = 'Impossible de charger les terrains.'; this.chargement = false; }
+      next: (data) => {
+        this.terrains = data;
+        this.chargement = false;
+      },
+      error: () => {
+        this.erreur = 'Impossible de charger les terrains.';
+        this.chargement = false;
+      }
     });
   }
 }

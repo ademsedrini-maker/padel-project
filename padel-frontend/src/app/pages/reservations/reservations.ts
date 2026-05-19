@@ -5,18 +5,19 @@ import { FormsModule } from '@angular/forms';
 import { NavbarComponent } from '../../layout/navbar/navbar';
 import { Auth } from '../../core/services/auth';
 
-interface Terrain {
-  id: number;
-  nom: string;
-  site: string;
-}
-
 interface Creneau {
   id: number;
   dateHeureDebut: string;
   dateHeureFin: string;
   disponible: boolean;
-  terrain: Terrain;
+  terrainNumero: number;
+  siteNom: string;
+}
+
+interface TerrainFiltre {
+  id: number;
+  nom: string;
+  site: string;
 }
 
 interface Reservation {
@@ -40,7 +41,7 @@ export class Reservations implements OnInit {
   tousCreneaux: Creneau[] = [];
   creneauxFiltres: Creneau[] = [];
   mesReservations: Reservation[] = [];
-  terrains: Terrain[] = [];
+  terrains: TerrainFiltre[] = [];
 
   dateSelectionnee: string = '';
   terrainSelectionne: number | null = null;
@@ -67,21 +68,29 @@ export class Reservations implements OnInit {
         const user = this.authService.currentUser();
         const now = new Date();
 
+        // Créneaux disponibles et dans le futur
         let creneauxDispos = data.filter(c => c.disponible && new Date(c.dateHeureDebut) > now);
 
+        // Filtre par site pour les membres de type SITE
         if (user?.typeMembre === 'SITE' && user?.site) {
-          creneauxDispos = creneauxDispos.filter(c => c.terrain.site === user.site);
+          creneauxDispos = creneauxDispos.filter(c => c.siteNom === user.site);
         }
 
         this.tousCreneaux = creneauxDispos;
         this.creneauxFiltres = creneauxDispos;
 
-        const ids = new Set<number>();
+        // Construire la liste des terrains uniques pour le select
+        const ids = new Set<string>();
         this.terrains = creneauxDispos
-          .map(c => c.terrain)
+          .map(c => ({
+            id: c.terrainNumero,
+            nom: `Terrain ${c.terrainNumero}`,
+            site: c.siteNom
+          }))
           .filter(t => {
-            if (ids.has(t.id)) return false;
-            ids.add(t.id);
+            const key = `${t.site}-${t.id}`;
+            if (ids.has(key)) return false;
+            ids.add(key);
             return true;
           });
       },
@@ -97,7 +106,7 @@ export class Reservations implements OnInit {
         ? c.dateHeureDebut.startsWith(this.dateSelectionnee)
         : true;
       const matchTerrain = this.terrainSelectionne
-        ? c.terrain.id === +this.terrainSelectionne
+        ? c.terrainNumero === +this.terrainSelectionne
         : true;
       return matchDate && matchTerrain;
     });

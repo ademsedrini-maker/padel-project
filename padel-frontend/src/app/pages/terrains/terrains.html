@@ -23,16 +23,19 @@
     @for (t of terrains; track t.id) {
     <div class="terrain-card">
       <div class="terrain-numero">Terrain {{ t.numero }}</div>
+
       <div class="terrain-info">
         <span class="label">Site</span>
-        <span>{{ t.site?.nom || '—' }}</span>
+        <span>{{ t.siteNom }}</span>
       </div>
+
       <div class="terrain-info">
         <span class="label">Adresse</span>
-        <span>{{ t.site?.adresse || '—' }}</span>
+        <span>{{ t.adresse }}</span>
       </div>
+
       <div class="terrain-horaires">
-        🕗 {{ t.site?.heureOuverture || '—' }} → {{ t.site?.heureFermeture || '—' }}
+        🕗 {{ t.heureOuverture }} → {{ t.heureFermeture }}
       </div>
     </div>
     }
